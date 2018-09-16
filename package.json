@@ -1,0 +1,23 @@
+{
+  "name": "youtube-dl-button",
+  "version": "1.0.0",
+  "description": "Add a page action to YouTube that invokes youtube-dl to grab the video.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp dist",
+    "watch": "gulp watch"
+  },
+  "author": "Mark Lieberman",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-jshint": "^2.0.4",
+    "gulp-sass": "^3.1.0",
+    "gulp-zip": "^4.1.0",
+    "jshint": "^2.9.4",
+    "jshint-stylish": "^2.2.1"
+  },
+  "dependencies": {
+    "bootstrap": "^4.1.1"
+  }
+}

@@ -1,0 +1,150 @@
+/* import custom bootstrap 4 */
+@import "bootstrap-popup";
+
+$popup-width: 600px;
+$popup-height: 400px;
+
+body {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+
+  min-width: $popup-width;
+  max-width: $popup-width;
+  min-height: $popup-height;
+  max-height: $popup-height;
+  overflow: hidden;
+
+  padding: 5px;
+
+  background: linear-gradient(180deg, #fff 10px, #eee 50px, #eee 100%);
+}
+
+a {
+  color: #000;
+}
+
+.grab-video {
+  margin-bottom: 0;
+}
+
+#settings-panel {
+  margin-top: 5px;
+}
+
+#jobs-list-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  border-bottom: 1px solid #ccc;
+  margin: 5px 0;
+}
+
+#jobs-list {
+  #empty-list {
+    padding-top: 15px;
+    text-align: center;
+    color: #ccc;
+    font-weight: bold;
+  }
+
+  .job {
+    display: flex;
+    flex-flow: row nowrap;
+    overflow: hidden;
+    padding: 5px;
+
+    .cancel-job {
+      display: none;
+    }
+
+    &[data-state="active"] {
+      .ended { display: none }
+      .cancelled { display: none }
+      .errored { display: none }
+      .icon {
+        background-color: #718EA4;
+      }
+      .cancel-job {
+        display: block;
+      }
+    }
+
+    &[data-state="ended"] {
+      .active { display: none }
+      .cancelled { display: none }
+      .errored { display: none }
+      .icon {
+        background-color: #8ABD5F;
+      }
+    }
+
+    &[data-state="cancelled"] {
+      .active { display: none }
+      .ended { display: none }
+      .errored { display: none }
+    }
+
+    &[data-state="errored"] {
+      .active { display: none }
+      .ended { display: none }
+      .cancelled { display: none }
+      .icon {
+        background-color: #FFAAAA;
+      }
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #ddd;
+    }
+
+    .icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 32px;
+      max-width: 32px;
+      min-height: 24px;
+      max-height: 24px;
+      background: #cdcdcd;
+      border-radius: 5px;
+      margin-right: 5px;
+    }
+
+    .details {
+      display: flex;
+      flex-flow: column nowrap;
+      flex-grow: 1;
+      overflow: hidden;
+      font-size: 0.8em;
+
+      .file-name {
+        font-weight: bold;
+
+        &:empty {
+          display: none;
+
+          & + .video-url {
+            font-weight: bold;
+            color: #000;
+          }
+        }
+      }
+
+      .video-url {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #999;
+      }
+
+      .output {
+        word-break: break-all;
+      }
+    }
+  }
+}
+
+.list-buttons {
+  text-align: right;
+}

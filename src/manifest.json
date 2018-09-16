@@ -1,0 +1,52 @@
+{
+
+  "manifest_version": 2,
+  "name": "Youtube-DL Button",
+  "version": "1.0.0",
+
+  "applications": {
+    "gecko": {
+      "id": "youtube-dl-button@liebs.ca",
+      "strict_min_version": "50.0"
+    }
+  },
+
+  "description": "Add a page action to YouTube that invokes youtube-dl to grab the video.",
+
+  "icons": {
+    "48": "icons/film-black.svg",
+    "96": "icons/film-black.svg"
+  },
+
+  "permissions": [
+    "activeTab",
+    "nativeMessaging",
+    "storage"
+  ],
+
+  "options_ui": {
+    "open_in_tab": true,
+    "browser_style": false,
+    "page": "options/options.html"
+  },
+
+  "browser_action": {
+    "browser_style": false,
+    "default_icon": "icons/film-dark.svg",
+    "default_popup": "popup/popup.html",
+    "theme_icons": [
+      {
+        "light": "icons/film-light.svg",
+        "dark": "icons/film-dark.svg",
+        "size": 32
+      }
+    ]
+  },
+
+  "background": {
+    "scripts": [
+      "background/background.js",
+      "background/updates.js"
+    ]
+  }
+}

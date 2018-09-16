@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Youtube-DL Button Options</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+          integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+  </head>
+  <body>
+    <form class="was-validated" id="options-form" novalidate>
+      <div class="container">
+        <h4>Youtube-DL Button Options</h4>
+
+        <div class="row">
+          <div class="col-md-12">
+            <h5>Setup</h5>
+            <div class="form-group">
+              <label for="exePath">Path to youtube-dl executable</label>
+              <input class="form-control" type="text" id="exe-path"
+                     required></input>
+              <small class="form-text text-muted">
+                Provide the absolute path to youtube-dl.
+              </small>
+              <small class="invalid-feedback">
+                This is required or the addon cannot function.
+              </small>
+            </div>
+            <div class="form-group">
+              <label for="save-in">Default download location</label>
+              <input class="form-control" type="text" id="save-in"
+                     required></input>
+              <small class="form-text text-muted">
+               Provide the absolute path to a folder where downloads will be saved.
+             </small>
+              <div class="invalid-feedback">
+                This field is required.
+              </div>
+            </div>
+
+            <h5>Switches</h5>
+            <div class="form-group">
+              <label for="format">
+                Default format
+                <a class="text-muted"
+                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
+                   target="_blank"
+                   title="View youtube-dl documentation">
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              </label>
+              <input class="form-control" type="text" id="format"
+                     list="formats"></input>
+              <datalist id="formats">
+                <option value="bestvideo+bestaudio/best"></option>
+                <option value="best"></option>
+                <option value="bestvideo"></option>
+                <option value="bestaudio"></option>
+                <option value="worst"></option>
+                <option value="worstvideo"></option>
+                <option value="worstaudio"></option>
+              </datalist>
+            </div>
+            <div class="form-group">
+              <label for="save-in">
+                Quick download audio format
+              </label>
+              <input class="form-control" type="text" id="quick-audio-format"></input>
+              <small class="form-text text-muted">
+                The format to download when the <i class="fa fa-music"></i> button is pressed.
+              </small>
+            </div>
+            <div class="form-group">
+              <label for="template">
+                Default naming template
+                <a class="text-muted"
+                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
+                   target="_blank"
+                   title="View youtube-dl documentation">
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              </label>
+              <input class="form-control" type="text" id="template"></input>
+            </div>
+            <div class="form-group">
+              <label for="template">
+                Custom youtube-dl arguments
+              </label>
+              <input class="form-control" type="text" id="custom-args"></input>
+              <small class="form-text text-muted">
+                Additional arguments to pass to youtube-dl.
+              </small>
+            </div>
+          </div><!-- /col -->
+        </div><!-- /row -->
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <button class="btn btn-primary" type="submit">
+                Save
+              </button>
+            </div>
+          </div><!-- /col -->
+        </div><!-- /row -->
+      </div>
+    </form>
+
+    <script src="/options/options.js" type="text/javascript"></script>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Youtube-DL Button Popup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+          href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+          integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="popup.css">
+  </head>
+  <body>
+
+    <!-- grab video -->
+    <div class="form-group grab-video">
+      <div class="input-group input-group-sm">
+        <div class="input-group-prepend">
+          <span class="input-group-text">
+            Grab from URL
+          </span>
+        </div>
+        <input class="form-control" type="text" id="video-url"></input>
+        <div class="input-group-append">
+          <!-- begin download button -->
+          <button class="btn btn-dark" id="create-job"
+                  title="Send URL to youtube-dl">
+            <i class="fa fa-download"></i>
+          </button>
+        </div>
+        <div class="input-group-append">
+          <!-- begin download button -->
+          <button class="btn btn-secondary" id="create-job-audio"
+                  title="Quick download audio format">
+            <i class="fa fa-music"></i>
+          </button>
+        </div>
+        <div class="input-group-append">
+          <!-- settings toggle button -->
+          <button class="btn btn-outline-secondary" id="toggle-settings"
+                  title="Toggle settings">
+            <i class="fa fa-cog"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- settings -->
+    <div id="settings-panel" style="display: none">
+      <ul class="nav nav-tabs nav-justified">
+        <li class="nav-item saving-tab">
+          <a class="nav-link" href="#">
+            <i class="fa fa-save"></i>
+            <span>Saving</span>
+          </a>
+        </li>
+        <li class="nav-item switches-tab">
+          <a class="nav-link" href="#">
+            <i class="fa fa-cogs"></i>
+            <span>Switches</span>
+          </a>
+        </li>
+      </ul>
+      <!-- saving tab -->
+      <div class="tab-content saving-tab">
+        <div class="form-group">
+          <label>
+            Save In
+          </label>
+          <div class="input-group input-group-sm">
+            <input class="form-control form-control-sm" type="text" id="save-in"></input>
+            <div class="input-group-append">
+              <!-- clear template -->
+              <button class="btn btn-secondary" id="clear-save-in"
+                      title="Clear save in">
+                <i class="fa fa-eraser"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- switches tab -->
+      <div class="tab-content switches-tab">
+        <div class="form-row">
+          <div class="col">
+            <div class="form-group">
+              <label>
+                Format Selection
+                <a class="text-muted"
+                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
+                   target="_blank"
+                   title="View youtube-dl documentation">
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              </label>
+              <div class="input-group input-group-sm">
+                <input class="form-control" type="text" id="format"
+                       list="formats"></input>
+                <div class="input-group-append">
+                  <!-- clear template -->
+                  <button class="btn btn-secondary" id="clear-format"
+                          title="Clear format">
+                    <i class="fa fa-eraser"></i>
+                  </button>
+                </div>
+              </div>
+              <datalist id="formats">
+                <option value="bestvideo+bestaudio/best"></option>
+                <option value="best"></option>
+                <option value="bestvideo"></option>
+                <option value="bestaudio"></option>
+                <option value="worst"></option>
+                <option value="worstvideo"></option>
+                <option value="worstaudio"></option>
+              </datalist>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-group">
+              <label>
+                Output Template
+                <a class="text-muted"
+                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
+                   target="_blank"
+                   title="View youtube-dl documentation">
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              </label>
+              <div class="input-group input-group-sm">
+                <input class="form-control" type="text" id="template"></input>
+                <div class="input-group-append">
+                  <!-- clear template -->
+                  <button class="btn btn-secondary" id="clear-template"
+                          title="Clear template">
+                    <i class="fa fa-eraser"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /.settings-panel -->
+
+    <!-- jobs-list -->
+    <div id="jobs-list-container">
+      <div id="jobs-list">
+        <div id="empty-list">
+          Job list is empty.
+        </div>
+      </div>
+    </div>
+    <template id="job-row-template">
+      <div class="job">
+        <div class="icon">
+          <i class="active fa fa-pulse fa-spinner"
+             title="Active"></i>
+          <i class="ended fa fa-check"
+             title="Ended"></i>
+          <i class="cancelled fa fa-times"
+             title="Cancelled"></i>
+          <i class="errored fa fa-exclamation-triangle"
+             title="Errored"></i>
+        </div>
+        <div class="details">
+          <div class="file-name"></div>
+          <div class="video-url"></div>
+          <div>
+            <a class="view-output" href="#"
+               target="_blank"
+               title="View job output">
+              <i class="fa fa-arrow-alt-circle-right"></i>
+            </a>
+            <span class="output"></span>
+          </div>
+        </div>
+        <div class="buttons">
+          <button class="btn btn-sm btn-secondary cancel-job"
+                  title="Cancel job">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- clear jobs -->
+    <div class="list-buttons">
+      <button class="btn btn-sm btn-secondary" id="cleanup-jobs"
+              title="Clear completed jobs from list">
+        <i class="fa fa-trash"></i>
+      </button>
+    </div>
+
+    <script src="popup.js"
+            type="text/javascript"></script>
+  </body>
+</html>
