@@ -30,128 +30,200 @@ const el = {
 
 // Add-on settings.
 const settings = {
-  quickAudioFormat: 'bestaudio'
+  addon: {
+    quickAudioFormat: 'bestaudio'
+  },
+  props: {
+    exePath: '',
+    saveIn: '',
+    template: '',
+    format: ''
+  },
+  popup: {
+    showSettings: true,
+    settingsTab: 'saving',
+    saveInHistory: [],
+    templateHistory: [],
+    formatHistory: []
+  }
 };
 
-// Default props.
-const props = {
-  exePath: '',
-  saveIn: '',
-  template: '',
-  format: ''
-};
-
-// Popup settings.
-const popup = {
-  showSettings: true,
-  settingsTab: 'saving',
-  // Props
-  saveIn: '',
-  template: '',
-  format: ''
-};
-
-let promises = [];
-promises.push(browser.storage.local.get({
-  settings,
-  props,
-  popup
-}).then(results => {
-  updateAddonSettings(results);
-  updatePropsSettings(results);
-  updatePopupSettings(results);
-}));
-
 /**
- * Apply add-on settings from local storage.
+ * A collection of per-domain settings.
  */
-function updateAddonSettings (results) {
-  Object.keys(settings).forEach(key => {
-    if (typeof results[key] !== 'undefined') {
-      props[key] = results[key];
-    }
-  });
+class PerDomainSettings {
+  constructor (data) {
+    data = data || {};
+    this.saveIn = data.saveIn || '';
+    this.template = data.template || '';
+    this.format = data.format || '';
+  }
 
-  el.inputSaveIn.placeholder = props.saveIn;
-  el.inputTemplate.placeholder = props.template;
-  el.inputFormat.placeholder = props.format;
-}
-
-/**
- * Apply default props from local storage.
- */
-function updatePropsSettings (results) {
-  Object.keys(props).forEach(key => {
-    if (typeof results.props[key] !== 'undefined') {
-      props[key] = results.props[key];
-    }
-  });
-
-  el.inputSaveIn.placeholder = props.saveIn;
-  el.inputTemplate.placeholder = props.template;
-  el.inputFormat.placeholder = props.format;
-}
-
-/**
- * Restore popup settings from local storage.
- */
-function updatePopupSettings (results) {
-  Object.keys(popup).forEach(key => {
-    if (typeof results.popup[key] !== 'undefined') {
-      popup[key] = results.popup[key];
-    }
-  });
-
-  el.inputSaveIn.value = popup.saveIn;
-  el.inputTemplate.value = popup.template;
-  el.inputFormat.value = popup.format;
+  isEmpty() {
+    return !this.saveIn && !this.template && !this.format;
+  }
 }
 
 // Get the URL of the active tab.
+let promises = [];
 promises.push(browser.tabs.executeScript({
   code: 'window.location.href'
 }).then(urls => {
-  el.inputVideoUrl.value = urls[0];
+  let url = new URL(urls[0]);
+
+  // Also get the per-domain settings for this host.
+  return browser.storage.local.get({
+    domains: {}
+  }).then(results => {
+    let domainSettings = new PerDomainSettings(results.domains[url.host]);
+    return {
+      url,
+      domainSettings
+    };
+  });
+}).catch(error => {
+  console.log('failed to get active tab URL');
+  return null;
+}));
+
+// Get the saved settings from local storage.
+promises.push(browser.storage.local.get(settings).then(results => {
+  // Copy settings into settings object.
+  [ 'addon', 'props', 'popup' ].forEach(group => {
+    Object.keys(settings[group]).forEach(key => {
+      if (typeof results[group][key] !== 'undefined') {
+        settings[group][key] = results[group][key];
+      }
+    });
+  });
+
+  el.inputSaveIn.placeholder = 'Default: ' + settings.props.saveIn;
+  el.inputTemplate.placeholder = 'Default: ' + settings.props.template;
+  el.inputFormat.placeholder = 'Default: ' + settings.props.format;
+
+  return settings;
 }));
 
 // Finish initialization when all promises resolve.
-Promise.all(promises).finally(() => {
-  // Initialize the state of the interface.
-  openSettingsTab(popup.settingsTab);
-  if (popup.showSettings) {
-    toggleSettingsPanel();
-  }
+Promise.all(promises)
+  .then(results => {
+    let { url, domainSettings } = results[0];
 
-  validateCreateJob();
+    el.inputVideoUrl.value = url.href;
 
-  // Update the job list and start polling.
-  refreshJobs();
-  startPollingJobs();
-});
+    // Restore per-domain settings if available.
+    el.inputSaveIn.value = domainSettings.saveIn;
+    el.inputTemplate.value = domainSettings.template;
+    el.inputFormat.value = domainSettings.format;
+  })
+  .finally(() => {
+    // Initialize the state of the interface.
+    openSettingsTab(settings.popup.settingsTab);
+    if (settings.popup.showSettings) {
+      toggleSettingsPanel();
+    }
+
+    validateCreateJob();
+
+    // Update the job list and start polling.
+    refreshJobs();
+    startPollingJobs();
+  });
 
 // Interface event setup -----------------------------------------------------------------------------------------------
 
-// Change validation
-el.inputVideoUrl.addEventListener('change', () => validateCreateJob());
+el.inputVideoUrl.addEventListener('input', () => {
+  validateCreateJob();
+});
 
-// Button clicks
-el.buttonCreateJob.addEventListener('click', () => createJob());
-el.buttonCreateJobAudio.addEventListener('click', () => createJob(true));
-el.buttonToggleSettings.addEventListener('click', () => toggleSettingsPanel());
+// Change
+el.inputVideoUrl.addEventListener('change', () => {
+  savePopupSettings();
+});
+el.inputSaveIn.addEventListener('change', () => {
+  savePopupSettings();
+});
+el.inputTemplate.addEventListener('change', () => {
+  savePopupSettings();
+});
+el.inputFormat.addEventListener('change', () => {
+  savePopupSettings();
+});
 
-el.buttonClearSaveIn.addEventListener('click', () => el.inputSaveIn.value = null);
-el.buttonClearTemplate.addEventListener('click', () => el.inputTemplate.value = null);
-el.buttonClearFormat.addEventListener('click', () => el.inputFormat.value = null);
+// CLick
+el.buttonCreateJob.addEventListener('click', () => {
+  createJob();
+});
+el.buttonCreateJobAudio.addEventListener('click', () => {
+  createJob(true);
+});
+el.buttonToggleSettings.addEventListener('click', () => {
+  toggleSettingsPanel();
+});
+el.buttonClearSaveIn.addEventListener('click', () => {
+  el.inputSaveIn.value = null;
+  savePopupSettings();
+});
+el.buttonClearTemplate.addEventListener('click', () => {
+  el.inputTemplate.value = null;
+  savePopupSettings();
+});
+el.buttonClearFormat.addEventListener('click', () => {
+  el.inputFormat.value = null;
+  savePopupSettings();
+});
+el.buttonCleanUp.addEventListener('click', () => {
+  cleanUpJobs();
+});
 
-el.buttonCleanUp.addEventListener('click', () => cleanUpJobs());
-
-// Add event listeners to sttings tab headers.
+// Add event listeners to settings tab headers.
 Object.keys(el.settingsTabs).forEach(key => {
   let a = el.settingsTabs[key].header;
-  a.addEventListener('click', (event) => openSettingsTab(key));
+  a.addEventListener('click', (event) => {
+    openSettingsTab(key);
+  });
 });
 
 // Functions -----------------------------------------------------------------------------------------------------------
+
+/**
+ * Save popup settings.
+ */
+function savePopupSettings () {
+  return Promise.all([
+    savePerDomainSettings()
+  ]);
+}
+
+/**
+ * Save per-domain settings.
+ */
+function savePerDomainSettings () {
+  try {
+    // Save the per-domain settings.
+    if (el.inputVideoUrl.value) {
+      var url = new URL(el.inputVideoUrl.value);
+      let domainSettings = new PerDomainSettings({
+        saveIn: el.inputSaveIn.value,
+        template: el.inputTemplate.value,
+        format: el.inputFormat.value
+      });
+      return browser.storage.local.get({ domains: {} }).then(results => {
+        if (domainSettings.isEmpty()) {
+          // Remove the saved entry for this domain.
+          delete results.domains[url.host];
+        } else {
+          // Update the saved entry for this domain.
+          results.domains[url.host] = domainSettings;
+        }
+        return browser.storage.local.set(results);
+      });
+    }
+  } catch (error) {
+    console.log('not saving per domain settings - invalid URL');
+  }
+  return Promise.resolve({});
+}
 
 /**
  * Toggle display of the settings tabs panel.
@@ -161,13 +233,13 @@ function toggleSettingsPanel () {
   if (el.settingsPanel.style.display === 'none') {
     el.settingsPanel.style.display = 'block';
     el.buttonToggleSettings.classList.add('active');
-    popup.showSettings = true;
-    browser.storage.local.set({ popup });
+    settings.popup.showSettings = true;
+    return browser.storage.local.set({ popup: settings.popup });
   } else {
     el.settingsPanel.style.display = 'none';
     el.buttonToggleSettings.classList.remove('active');
-    popup.showSettings = false;
-    browser.storage.local.set({ popup });
+    settings.popup.showSettings = false;
+    return browser.storage.local.set({ popup: settings.popup });
   }
 }
 
@@ -184,8 +256,8 @@ function openSettingsTab (tab) {
       header.classList.remove('active');
       content.style.display = 'none';
     }
-    popup.settingsTab = tab;
-    browser.storage.local.set({ popup });
+    settings.popup.settingsTab = tab;
+    browser.storage.local.set({ popup: settings.popup });
   });
 }
 
@@ -194,7 +266,17 @@ function openSettingsTab (tab) {
  */
 function validateCreateJob () {
   let disabled = false;
-  disabled |= !el.inputVideoUrl.value;
+  try {
+    if (el.inputVideoUrl.value) {
+      // Try to construct an instance of URL().
+      new URL(el.inputVideoUrl.value);
+    } else {
+      disabled = true;
+    }
+  } catch (error) {
+    disabled = true;
+  }
+
   el.buttonCreateJob.disabled = disabled;
   el.buttonCreateJobAudio.disabled = disabled;
 }
@@ -204,10 +286,16 @@ function validateCreateJob () {
  */
 function createJob (bestaudio) {
   // Ensure that required settings have been configured.
-  if (!props.exePath || !props.saveIn) {
+  if (!settings.props.exePath || !settings.props.saveIn) {
     window.alert("You must finish configuring the addon.");
     browser.runtime.openOptionsPage().then(() => window.close());
     return;
+  }
+
+  // Use the addon quick audio format for audio jobs.
+  let format = el.inputFormat.value || settings.props.format;
+  if (bestaudio) {
+    format = settings.addon.quickAudioFormat;
   }
 
   browser.runtime.sendMessage({
@@ -215,9 +303,9 @@ function createJob (bestaudio) {
     data: {
       props: {
         videoUrl: el.inputVideoUrl.value,
-        saveIn: el.inputSaveIn.value || props.saveIn,
-        template: el.inputTemplate.value || props.template,
-        format: bestaudio ? settings.quickAudioFormat : (el.inputFormat.value || props.format)
+        saveIn: el.inputSaveIn.value || settings.props.saveIn,
+        template: el.inputTemplate.value || settings.props.template,
+        format
       }
     }
   });

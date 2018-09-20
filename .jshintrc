@@ -9,6 +9,7 @@
     "document": true,
     "console": true,
     "browser": true,
-    "chrome": true
+    "chrome": true,
+    "URL": true
   }
 }
