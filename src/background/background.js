@@ -27,7 +27,6 @@ browser.storage.local.get(settings).then(results => {
  * Invoked when settings are changed.
  */
 browser.storage.onChanged.addListener((changes, area) => {
-  console.log(changes, area);
   if ((area === 'local') && changes.addon) {
     Object.keys(settings.addon).forEach(key => {
       if (typeof changes.addon.newValue[key] !== 'undefined') {

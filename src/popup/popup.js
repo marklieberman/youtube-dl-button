@@ -190,6 +190,7 @@ Object.keys(el.settingsTabs).forEach(key => {
  */
 function savePopupSettings () {
   return Promise.all([
+    // TODO Save other settings.
     savePerDomainSettings()
   ]);
 }
@@ -232,13 +233,17 @@ function toggleSettingsPanel () {
   if (el.settingsPanel.style.display === 'none') {
     el.settingsPanel.style.display = 'block';
     el.buttonToggleSettings.classList.add('active');
-    settings.popup.showSettings = true;
-    return browser.storage.local.set({ popup: settings.popup });
+    if (!settings.popup.showSettings) {
+      settings.popup.showSettings = true;
+      return browser.storage.local.set({ popup: settings.popup });
+    }
   } else {
     el.settingsPanel.style.display = 'none';
     el.buttonToggleSettings.classList.remove('active');
-    settings.popup.showSettings = false;
-    return browser.storage.local.set({ popup: settings.popup });
+    if (settings.popup.showSettings) {
+      settings.popup.showSettings = false;
+      return browser.storage.local.set({ popup: settings.popup });
+    }
   }
 }
 
@@ -251,12 +256,16 @@ function openSettingsTab (tab) {
     if (key === tab) {
       header.classList.add('active');
       content.style.display = 'block';
+
+      // Save the selected tab to popup settings.
+      if (settings.popup.settingsTab !== tab) {
+        settings.popup.settingsTab = tab;
+        browser.storage.local.set({ popup: settings.popup });
+      }
     } else {
       header.classList.remove('active');
       content.style.display = 'none';
     }
-    settings.popup.settingsTab = tab;
-    browser.storage.local.set({ popup: settings.popup });
   });
 }
 
