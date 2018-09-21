@@ -6,7 +6,36 @@ const state = {
   jobId: 1,
 };
 
+const settings = {
+  addon: {
+    concurrentJobsLimit: 1
+  }
+};
+
+// Get initial settings values.
+browser.storage.local.get(settings).then(results => {
+  Object.keys(settings.addon).forEach(key => {
+    if (typeof results.addon[key] !== 'undefined') {
+      settings.addon[key] = results.addon[key];
+    }
+  });
+});
+
 // Events -----------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Invoked when settings are changed.
+ */
+browser.storage.onChanged.addListener((changes, area) => {
+  console.log(changes, area);
+  if ((area === 'local') && changes.addon) {
+    Object.keys(settings.addon).forEach(key => {
+      if (typeof changes.addon.newValue[key] !== 'undefined') {
+        settings.addon[key] = changes.addon.newValue[key];
+      }
+    });
+  }
+});
 
 /**
  * Invoked by messages from popups and content scripts.
@@ -65,7 +94,7 @@ class Job {
     this.id = state.jobId++;
     this.props = props;
     this.cancelRequested = false;
-    this.state = 'active';
+    this.state = 'waiting';
     this.output = [];
   }
 
@@ -92,6 +121,9 @@ class Job {
         }
       });
 
+      // Flag this job as active.
+      this.state = 'active';
+
       // Make the icon blue because a job is running.
       browser.browserAction.setIcon({
         path: 'icons/film-blue.svg'
@@ -113,7 +145,7 @@ class Job {
   }
 
   /**
-   * Mark the job as ended.
+   * Flag the job as ended.
    */
   ended (exitCode) {
     if (this.cancelRequested) {
@@ -146,10 +178,15 @@ function openPort () {
 }
 
 /**
- * True if there are no active jobs, otherwise false.
+ * Count the number of active jobs.
  */
-function isQueueIdle () {
-  return state.jobs.every(job => job.state !== 'active');
+function countActiveJobs () {
+  return state.jobs.reduce((count, job) => {
+    if (job.state === 'active') {
+      count++;
+    }
+    return count;
+  }, 0);
 }
 
 /**
@@ -157,6 +194,20 @@ function isQueueIdle () {
  */
 function findJobById (id) {
   return state.jobs.find(job => job.id === id);
+}
+
+/**
+ * Find the next job in the waiting state.
+ */
+function findNextWaitingJob () {
+  // Search from last (lowest job ID) to first (highest job ID.)
+  for (let i = (state.jobs.length - 1); i >= 0; i--) {
+    let job = state.jobs[i];
+    if (job.state === 'waiting') {
+      return job;
+    }
+  }
+  return null;
 }
 
 /**
@@ -175,8 +226,13 @@ function onGetJobs (message) {
  */
 function onCreateJob (message) {
   let job = new Job(message.data.props);
-  job.create();
   state.jobs.unshift(job);
+
+  // Start the job if below the concurrent jobs limit.
+  if (countActiveJobs() < settings.addon.concurrentJobsLimit) {
+    job.create();
+  }
+
   return Promise.resolve(job);
 }
 
@@ -197,7 +253,7 @@ function onCancelJob (message) {
  */
 function onCleanJobs (message) {
   state.jobs
-    .filter(job => job.state !== 'active')
+    .filter(job => (job.state !== 'waiting' && job.state !== 'active'))
     .forEach(job => {
       let index = state.jobs.indexOf(job);
       state.jobs.splice(index, 1);
@@ -212,7 +268,7 @@ function onCleanJobs (message) {
 function onJobOutput (message) {
   let job = findJobById(message.data.jobId);
   if (job) {
-    console.log('youtube-dl', message.data.output);
+    console.log('youtube-dl', message.data.jobId, message.data.output);
     job.append(message.data.output);
 
     // Try to parse out the filename from the output.
@@ -244,8 +300,17 @@ function onJobEnded (message) {
     job.ended(message.data.exitCode);
   }
 
+  // Start a job if below the concurrent jobs limit.
+  let activeJobCount = countActiveJobs();
+  if (activeJobCount < settings.addon.concurrentJobsLimit) {
+    job = findNextWaitingJob();
+    if (job) {
+      job.create();
+    }
+  }
+
   // Disconnect the port if there are no jobs.
-  if (isQueueIdle()) {
+  if (!job && (activeJobCount === 0)) {
     console.log('no jobs - disconnecting native-app');
     state.port.disconnect();
     state.port = null;

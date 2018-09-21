@@ -37,11 +37,19 @@
               <input class="form-control" type="text" id="save-in"
                      required></input>
               <small class="form-text text-muted">
-               Provide the absolute path to a folder where downloads will be saved.
-             </small>
+                Provide the absolute path to a folder where downloads will be saved.
+              </small>
               <div class="invalid-feedback">
                 This field is required.
               </div>
+            </div>
+            <div class="form-group">
+              <label for="concurrent-jobs-limit">Concurrent download limit</label>
+              <input class="form-control" type="number" id="concurrent-jobs-limit"
+                     step="1" min="1" max="10"></input>
+              <small class="form-text text-muted">
+                The number of downloads that can run simultaneously.
+              </small>
             </div>
 
             <h5>Switches</h5>

@@ -3,4 +3,4 @@ node_modules/*
 src/**/*.css
 dist/*
 
-native-app/*
+native-app

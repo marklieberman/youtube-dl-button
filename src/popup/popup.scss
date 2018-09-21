@@ -58,7 +58,15 @@ a {
       display: none;
     }
 
+    &[data-state="waiting"] {
+      .ended { display: none }
+      .active { display: none }
+      .cancelled { display: none }
+      .errored { display: none }      
+    }
+
     &[data-state="active"] {
+      .waiting { display: none }
       .ended { display: none }
       .cancelled { display: none }
       .errored { display: none }
@@ -71,6 +79,7 @@ a {
     }
 
     &[data-state="ended"] {
+      .waiting { display: none }
       .active { display: none }
       .cancelled { display: none }
       .errored { display: none }
@@ -80,12 +89,14 @@ a {
     }
 
     &[data-state="cancelled"] {
+      .waiting { display: none }
       .active { display: none }
       .ended { display: none }
       .errored { display: none }
     }
 
     &[data-state="errored"] {
+      .waiting { display: none }
       .active { display: none }
       .ended { display: none }
       .cancelled { display: none }

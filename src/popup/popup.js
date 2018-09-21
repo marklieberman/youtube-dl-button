@@ -41,10 +41,7 @@ const settings = {
   },
   popup: {
     showSettings: true,
-    settingsTab: 'saving',
-    saveInHistory: [],
-    templateHistory: [],
-    formatHistory: []
+    settingsTab: 'saving'
   }
 };
 
@@ -447,7 +444,7 @@ function updateJobRow (node, job) {
   if (job.output.length) {
     nodeEl.divOutput.innerText = job.output[job.output.length - 1];
   } else {
-    nodeEl.divOutput.innerText = 'Starting...';
+    nodeEl.divOutput.innerText = 'Waiting...';
   }
 }
 

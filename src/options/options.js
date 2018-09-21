@@ -7,18 +7,20 @@ const el = {
   inputTemplate: document.getElementById('template'),
   inputFormat: document.getElementById('format'),
   inputCustomArgs: document.getElementById('custom-args'),
-  inputQuickAudioFormat: document.getElementById('quick-audio-format')
+  inputQuickAudioFormat: document.getElementById('quick-audio-format'),
+  inputConcurrentJobsLimit: document.getElementById('concurrent-jobs-limit')
 };
 
 // Restore the options from local stoage.
 browser.storage.local.get({
-  quickAudioFormat: null,
+  addon: {},
   props: {}
 }).then(results => {
   // Setup
   el.inputExePath.value = results.props.exePath || '';
   el.inputSaveIn.value = results.props.saveIn || '';
-  el.inputQuickAudioFormat.value = results.quickAudioFormat || '';
+  el.inputQuickAudioFormat.value = results.addon.quickAudioFormat || '';
+  el.inputConcurrentJobsLimit.value = results.addon.concurrentJobsLimit || 1;
 
   // Switches
   el.inputTemplate.value = results.props.template || '';
@@ -38,7 +40,10 @@ function saveOptions (event) {
   }
 
   return browser.storage.local.set({
-    quickAudioFormat: el.inputQuickAudioFormat.value,
+    addon: {
+      quickAudioFormat: el.inputQuickAudioFormat.value,
+      concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value)
+    },
     props: {
       exePath: el.inputExePath.value,
       saveIn: el.inputSaveIn.value,

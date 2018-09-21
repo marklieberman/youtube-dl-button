@@ -23,7 +23,10 @@
     console.log('youtube-dl button installed');
     return browser.runtime.getPlatformInfo().then(platformInfo => {
       let settings = {
-        quickAudioFormat: 'bestaudio',
+        addon: {
+          quickAudioFormat: 'bestaudio',
+          concurrentJobsLimit: 1
+        },
         props: {
           saveIn: '',
           template: '%(title)s-%(id)s.%(ext)s',
