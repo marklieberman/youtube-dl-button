@@ -104,14 +104,16 @@ promises.push(browser.storage.local.get(settings).then(results => {
 // Finish initialization when all promises resolve.
 Promise.all(promises)
   .then(results => {
-    let { url, domainSettings } = results[0];
+    if (results[0]) {
+      let { url, domainSettings } = results[0];
 
-    el.inputVideoUrl.value = url.href;
+      el.inputVideoUrl.value = url.href;
 
-    // Restore per-domain settings if available.
-    el.inputSaveIn.value = domainSettings.saveIn;
-    el.inputTemplate.value = domainSettings.template;
-    el.inputFormat.value = domainSettings.format;
+      // Restore per-domain settings if available.
+      el.inputSaveIn.value = domainSettings.saveIn;
+      el.inputTemplate.value = domainSettings.template;
+      el.inputFormat.value = domainSettings.format;
+    }
   })
   .finally(() => {
     // Initialize the state of the interface.

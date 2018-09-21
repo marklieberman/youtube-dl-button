@@ -10,6 +10,7 @@ var sources = {
     'src/**/*.js'
   ],
   sass: [
+    'src/common/bootstrap.scss',
     'src/popup/popup.scss'
   ],
   watch: {
