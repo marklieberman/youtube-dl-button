@@ -10,14 +10,16 @@ body {
   justify-content: flex-start;
   align-items: stretch;
 
-  min-width: $popup-width;
-  max-width: $popup-width;
+  @media screen and (min-width: 400px) {
+    min-width: $popup-width;
+    max-width: $popup-width;    
+  }
+
   min-height: $popup-height;
   max-height: $popup-height;
+
   overflow: hidden;
-
   padding: 5px;
-
   background: linear-gradient(180deg, #fff 10px, #eee 50px, #eee 100%);
 }
 
@@ -62,7 +64,7 @@ a {
       .ended { display: none }
       .active { display: none }
       .cancelled { display: none }
-      .errored { display: none }      
+      .errored { display: none }
     }
 
     &[data-state="active"] {
