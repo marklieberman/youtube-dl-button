@@ -1,6 +1,12 @@
 .DS_Store
+
+# web-ext
 node_modules/*
 src/**/*.css
 dist/*
 
-native-app
+# native app
+**/.vs/
+**/packages/
+**/bin/
+**/obj/
