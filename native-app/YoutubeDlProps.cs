@@ -10,6 +10,9 @@ namespace YoutubeDlButton
         [JsonProperty("exePath")]
         public string ExePath { get; set; }
 
+        [JsonProperty("updateExe")]
+        public bool UpdateExe { get; set; }
+
         [JsonProperty("saveIn")]
         public string SaveIn { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
@@ -26,38 +29,43 @@ namespace YoutubeDlButton
         public string CustomArgs { get; set; }
 
         [JsonProperty("restrictFilenames")]
-        public Boolean RestrictFilenames { get; set; } = false;
+        public bool RestrictFilenames { get; set; } = false;
 
         /// <summary>
         /// Create an argument string from the properties.
         /// </summary>
         public string ToArguments()
         {
-            var args = new List<String>();
-            
+            if (UpdateExe)
+            {
+                return "--update";
+            }
+
+            var args = new List<string>();
+
             if (RestrictFilenames)
             {
                 args.Add("--restrict-filenames");
             }
 
-            if (!String.IsNullOrEmpty(SaveIn) || !String.IsNullOrEmpty(Template))
+            if (!string.IsNullOrEmpty(SaveIn) || !string.IsNullOrEmpty(Template))
             {
-                args.Add(String.Format("--output \"{0}\"", Path.Combine(SaveIn ?? "", Template ?? "")));                
+                args.Add(string.Format("--output \"{0}\"", Path.Combine(SaveIn ?? "", Template ?? "")));                
             }
 
-            if (!String.IsNullOrEmpty(Format))
+            if (!string.IsNullOrEmpty(Format))
             {
-                args.Add(String.Format("--format {0}", Format));
+                args.Add(string.Format("--format {0}", Format));
             }
 
-            if (!String.IsNullOrEmpty(CustomArgs))
+            if (!string.IsNullOrEmpty(CustomArgs))
             {
                 args.Add(CustomArgs);
             }
 
             args.Add(VideoUrl);
 
-            return String.Join(" ", args.ToArray());
+            return string.Join(" ", args.ToArray());
         }
     }
 }

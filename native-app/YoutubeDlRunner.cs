@@ -6,10 +6,6 @@ namespace YoutubeDlButton
 {
     class YoutubeDlRunner
     {
-        private Regex interestingOutput = new Regex(
-            @"^\[download|ffmpeg\]", 
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        
         private Process process;
 
         public int JobId { get; set; }
@@ -48,7 +44,7 @@ namespace YoutubeDlButton
             catch (Exception e)
             {
                 // Send the error message back to the addon.
-                Output?.Invoke(this, String.Format("Error starting youtube-dl process: {0}", e.Message));
+                Output?.Invoke(this, string.Format("Error starting youtube-dl process: {0}", e.Message));
             }
 
             // Invoke the ended callback when the process exits.
@@ -65,7 +61,7 @@ namespace YoutubeDlButton
 
         private void OnOutputReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!String.IsNullOrEmpty(e.Data))
+            if (!string.IsNullOrEmpty(e.Data))
             {                
                 Debug.WriteLine(e.Data);
                 Output?.Invoke(this, e.Data);

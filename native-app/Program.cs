@@ -12,11 +12,11 @@ namespace YoutubeDlButton
 {
     class Program
     {
-        static Object Lock = new Object();
+        static readonly object Lock = new object();
 
-        static ConcurrentDictionary<int,YoutubeDlRunner> jobs = new ConcurrentDictionary<int,YoutubeDlRunner>();
+        static readonly ConcurrentDictionary<int,YoutubeDlRunner> jobs = new ConcurrentDictionary<int,YoutubeDlRunner>();
 
-        public static async Task Main(string[] args)
+        public static async Task Main()
         {
             //Thread.Sleep(10000);
 
@@ -86,7 +86,7 @@ namespace YoutubeDlButton
         /// </summary>
         /// <param name="message"></param>
         static void OnMessage(JObject message) {
-            switch (message["topic"].Value<String>())
+            switch (message["topic"].Value<string>())
             {
                 case "create-job":
                     OnCreateJob(message.ToObject<Message<CreateJob>>());
