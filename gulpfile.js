@@ -1,9 +1,9 @@
 'use strict';
 
-var gulp     = require('gulp'),
-    jshint   = require('gulp-jshint'),
-    sass     = require('gulp-sass'),
-    zip      = require('gulp-zip');
+var gulp   = require('gulp'),
+    jshint = require('gulp-jshint'),
+    sass   = require('gulp-sass'),
+    zip    = require('gulp-zip');
 
 var sources = {
   js: [
@@ -23,31 +23,38 @@ var sources = {
   ]
 };
 
-gulp.task('default', [ 'lint', 'watch' ]);
+function watchFiles () {
+  gulp.watch(sources.js, lintTask);
+  
+  // Other sass files import these, so build them when these change.
+  gulp.watch(sources.watch.sass, sassTask);
+}
 
-gulp.task('watch', function () {
-  gulp.watch(sources.js, [ 'lint' ]);
-  gulp.watch(sources.watch.sass, [ 'sass' ]);
-});
-
-gulp.task('sass', function () {
-  gulp.src(sources.sass)
+function sassTask () {
+  return gulp.src(sources.sass)
     .pipe(sass().on('error', sass.logError))
     .pipe(gulp.dest(function (file) {
       return file.base;
     }));
-});
+}
 
-gulp.task('lint', function () {
+function lintTask () {
   return gulp.src(sources.js)
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));
-});
+}
 
-gulp.task('dist', [ 'sass', 'lint' ], function () {
+function distTask () {
   return gulp.src(sources.dist)
     .pipe(zip('youtube-dl-button.xpi', {
       compress: false
     }))
     .pipe(gulp.dest('dist'));
-});
+}
+
+exports.sass = sassTask;
+exports.lint = lintTask;
+exports.dist = distTask;
+
+exports.watch = gulp.series(sassTask, watchFiles);
+exports.default = gulp.series(lintTask, watchFiles);
