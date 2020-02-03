@@ -25,4 +25,4 @@ Instructions for installing the native app and youtube-dl.exe are [in the Wiki](
 
 ## Contributing
 
-This project could use 1) a cross-platform native-app to add support for Linux and MacOS, 2) an installer to create manifest and registry entries automateically, and 3) an auto-update feature to grab new versions of youtube-dl.exe. Any contributions would be appreciated and I would publish the addon on AMO once these features are available.
+This project could use 1) a cross-platform native-app to add support for Linux and MacOS, 2) an installer to create manifest and registry entries automatically, ~~and 3) an auto-update feature to grab new versions of youtube-dl.exe~~. Any contributions would be appreciated and I would publish the addon on AMO once these features are available.
