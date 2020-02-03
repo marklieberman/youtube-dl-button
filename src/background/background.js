@@ -54,6 +54,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return onCancelJob(message);
   case 'ydb-clean-jobs':
     return onCleanJobs(message);
+  case 'ydb-update-exe':
+    return onUpdateExe(message);
   }
 
   return false;
@@ -245,6 +247,19 @@ function onCancelJob (message) {
     return Promise.resolve(job);
   }
   return Promise.resolve(false);
+}
+
+/**
+ * Create a job to update youtube-dl.
+ */
+function onUpdateExe (message) {
+  let job = new Job({
+    videoUrl: 'Update youtube-dl.exe executable',
+    updateExe: true
+  });
+  state.jobs.unshift(job);
+  job.create();
+  return Promise.resolve(job);
 }
 
 /**

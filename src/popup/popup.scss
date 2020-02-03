@@ -159,5 +159,6 @@ a {
 }
 
 .list-buttons {
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
 }

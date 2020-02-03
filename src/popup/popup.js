@@ -25,6 +25,7 @@ const el = {
   divJobsList: document.getElementById('jobs-list'),
   divEmptyList: document.getElementById('empty-list'),
   templateJobRow: document.getElementById('job-row-template'),
+  updateExe: document.getElementById('update-exe'),
   buttonCleanUp: document.getElementById('cleanup-jobs')
 };
 
@@ -149,7 +150,7 @@ el.inputFormat.addEventListener('change', () => {
   savePopupSettings();
 });
 
-// CLick
+// Click
 el.buttonCreateJob.addEventListener('click', () => {
   createJob();
 });
@@ -170,6 +171,9 @@ el.buttonClearTemplate.addEventListener('click', () => {
 el.buttonClearFormat.addEventListener('click', () => {
   el.inputFormat.value = null;
   savePopupSettings();
+});
+el.updateExe.addEventListener('click', () => {
+  updateExe();
 });
 el.buttonCleanUp.addEventListener('click', () => {
   cleanUpJobs();
@@ -328,6 +332,16 @@ function cancelJob (jobId) {
     data: {
       jobId
     }
+  });
+}
+
+/**
+ * Update the youtube-dl executable.
+ */
+function updateExe () {
+  browser.runtime.sendMessage({
+    topic: 'ydb-update-exe',
+    data: {}
   });
 }
 
