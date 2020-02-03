@@ -7,7 +7,7 @@
   "applications": {
     "gecko": {
       "id": "youtube-dl-button@liebs.ca",
-      "strict_min_version": "50.0"
+      "strict_min_version": "56.0"
     }
   },
 
