@@ -1,6 +1,6 @@
 {
   "name": "youtube-dl-button",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Add a browser action that sends the tab or a URL to youtube-dl.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
