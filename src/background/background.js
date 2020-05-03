@@ -139,12 +139,18 @@ class Job {
    */
   cancel () {
     this.cancelRequested = true;
-    state.port.postMessage({
-      topic: 'cancel-job',
-      data: {
-        jobId: this.id,
-      }
-    });
+    if (this.state === 'waiting') {
+      this.setState('cancelled');
+      this.append('Job cancelled.');
+    } else {
+      state.port.postMessage({
+        topic: 'cancel-job',
+        data: {
+          jobId: this.id,
+        }
+      });      
+    }
+    
   }
 
   /**
@@ -153,6 +159,7 @@ class Job {
   ended (exitCode) {
     if (this.cancelRequested) {
       this.setState('cancelled');
+      this.append('Job cancelled.');
     } else {
       this.setState((exitCode > 0) ? 'errored' : 'ended');
     }

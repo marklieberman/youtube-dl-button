@@ -95,7 +95,10 @@ a {
       .ended { display: none }
       .active { display: none }
       .cancelled { display: none }
-      .errored { display: none }      
+      .errored { display: none }
+      .cancel-job {
+        display: block;
+      }
     }
 
     &[data-state="active"] {
