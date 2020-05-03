@@ -25,7 +25,8 @@
       let settings = {
         addon: {
           quickAudioFormat: 'bestaudio',
-          concurrentJobsLimit: 1
+          concurrentJobsLimit: 1,
+          switchSets: '[]'
         },
         props: {
           saveIn: '',

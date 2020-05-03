@@ -37,17 +37,26 @@
           </button>
         </div>
         <div class="input-group-append">
-          <!-- settings toggle button -->
-          <button class="btn btn-outline-secondary" id="toggle-settings"
-                  title="Toggle settings">
-            <i class="fa fa-cog"></i>
+          <!-- dropdown button -->
+          <div id="main-dropdown" style="display: none">
+            <a id="open-addon-options" href="/options/options.html" target="_blank">
+              Open add-on options
+            </a>
+            <div class="group-heading">
+              Quick Configure
+            </div>
+            <div id="switch-sets-list"></div>
+          </div>
+          <button class="btn btn-outline-secondary active" id="toggle-main-dropdown"
+                  title="Popup options">
+            <i class="fa fa-caret-down"></i>
           </button>
         </div>
       </div>
     </div>
 
     <!-- settings -->
-    <div id="settings-panel" style="display: none">
+    <div id="settings-panel">
       <ul class="nav nav-tabs nav-justified">
         <li class="nav-item saving-tab">
           <a class="nav-link" href="#">

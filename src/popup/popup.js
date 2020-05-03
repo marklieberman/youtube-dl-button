@@ -4,7 +4,9 @@ const el = {
   inputVideoUrl: document.getElementById('video-url'),
   buttonCreateJob: document.getElementById('create-job'),
   buttonCreateJobAudio: document.getElementById('create-job-audio'),
-  buttonToggleSettings: document.getElementById('toggle-settings'),
+  buttonMainDowpdown: document.getElementById('toggle-main-dropdown'),
+  divMainDropdown: document.getElementById('main-dropdown'),
+  divSwitchSetsList: document.getElementById('switch-sets-list'),
   settingsPanel: document.getElementById('settings-panel'),
   settingsTabs: {
     saving: {
@@ -32,7 +34,8 @@ const el = {
 // Add-on settings.
 const settings = {
   addon: {
-    quickAudioFormat: 'bestaudio'
+    quickAudioFormat: 'bestaudio',
+    switchSets: '[]'
   },
   props: {
     exePath: '',
@@ -119,13 +122,12 @@ Promise.all(promises)
   .finally(() => {
     // Initialize the state of the interface.
     openSettingsTab(settings.popup.settingsTab);
-    if (settings.popup.showSettings) {
-      toggleSettingsPanel();
-    }
-
-    validateCreateJob();
+    
+    // Initialize the remain interface elements.
+    populateSwitchSetEntries();
 
     // Update the job list and start polling.
+    validateCreateJob();
     refreshJobs();
     startPollingJobs();
   });
@@ -157,8 +159,8 @@ el.buttonCreateJob.addEventListener('click', () => {
 el.buttonCreateJobAudio.addEventListener('click', () => {
   createJob(true);
 });
-el.buttonToggleSettings.addEventListener('click', () => {
-  toggleSettingsPanel();
+el.buttonMainDowpdown.addEventListener('click', () => {
+  toggleMainDropdown();
 });
 el.buttonClearSaveIn.addEventListener('click', () => {
   el.inputSaveIn.value = null;
@@ -232,22 +234,61 @@ function savePerDomainSettings () {
 /**
  * Toggle display of the settings tabs panel.
  */
-function toggleSettingsPanel () {
-  let style = el.settingsPanel.style;
-  if (el.settingsPanel.style.display === 'none') {
-    el.settingsPanel.style.display = 'block';
-    el.buttonToggleSettings.classList.add('active');
-    if (!settings.popup.showSettings) {
-      settings.popup.showSettings = true;
-      return browser.storage.local.set({ popup: settings.popup });
-    }
+function toggleMainDropdown () {
+  let dropdown = el.divMainDropdown;
+  if (dropdown.style.display === 'block') {
+    dropdown.style.display = 'none';
+    window.removeEventListener('click', outsideClick, { 
+      capture: true 
+    });
   } else {
-    el.settingsPanel.style.display = 'none';
-    el.buttonToggleSettings.classList.remove('active');
-    if (settings.popup.showSettings) {
-      settings.popup.showSettings = false;
-      return browser.storage.local.set({ popup: settings.popup });
+    dropdown.style.display = 'block';
+    window.addEventListener('click', outsideClick, { 
+      capture: true 
+    });
+  }
+
+  function outsideClick (event) {
+    if ((dropdown.style.display === 'block') && !dropdown.contains(event.target)) {
+      dropdown.style.display = 'none';
+      window.removeEventListener('click', outsideClick, { 
+        capture: true 
+      });
     }
+  }  
+}
+
+/**
+ * Populate the list of 'switch sets' that quickly configure the popup.
+ */
+function populateSwitchSetEntries () {
+  let switchSetList = el.divSwitchSetsList;
+
+  // Add a 'default' switch set that just clears all inputs.
+  addSwitchSetEntry({ name: 'Default' });
+
+  try {
+    // Append an entry for each switch set from settings.
+    JSON.parse(settings.addon.switchSets || '[]').forEach(addSwitchSetEntry);
+  } catch (error) {
+    console.log('invalid JSON in switch sets', settings.addon.switchSets);
+  }
+
+  function addSwitchSetEntry (profile) {
+    let item = document.createElement('a');
+    item.href = '#';
+    item.innerText = profile.name;
+    item.addEventListener('click', () => {
+      loadSwitchProfile(profile);
+      toggleMainDropdown();
+    });
+    switchSetList.appendChild(item);    
+  }
+
+  function loadSwitchProfile (profile) {
+    el.inputSaveIn.value = profile.saveIn || '';
+    el.inputTemplate.value = profile.template || '';
+    el.inputFormat.value = profile.format || '';
   }
 }
 

@@ -31,6 +31,36 @@ a {
   margin-bottom: 0;
 }
 
+#toggle-main-dropdown {
+  min-width: 16px;
+  padding: 0;  
+}
+
+#main-dropdown {
+  position: absolute;
+  top: 30px;
+  z-index: 1000;
+  right: 0;
+  min-width: 100px;    
+  padding: 5px 10px;
+
+  color: #fff;
+  background: $secondary;
+  border: 1px solid $input-group-addon-border-color;
+  @include border-radius($nav-tabs-border-radius);
+
+  a, a:active, a:visited {
+    display: block;
+    color: #fff;
+    width: 100%;
+  }
+
+  .group-heading {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+}
+
 #settings-panel {
   margin-top: 5px;
 }
