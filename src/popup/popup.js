@@ -470,7 +470,7 @@ function createJobRow (job) {
   let node = template.firstElementChild;
 
   let nodeEl = {
-    divVideoUrl: node.querySelector('.video-url'),
+    aVideoUrl: node.querySelector('.video-url'),
     buttonCancelJob: node.querySelector('.cancel-job'),
     buttonRetryJob: node.querySelector('.retry-job'),
     aViewOutput: node.querySelector('.view-output')
@@ -493,7 +493,8 @@ function createJobRow (job) {
   nodeEl.aViewOutput.href = '/output/output.html?jobId=' + job.id;
 
   // Fill the remaining parts of the template.
-  nodeEl.divVideoUrl.innerText = job.props.videoUrl;
+  nodeEl.aVideoUrl.innerText = job.props.videoUrl;
+  nodeEl.aVideoUrl.href = job.props.videoUrl;
   updateJobRow(node, job);
 
   // Append the job row to the document.
