@@ -86,7 +86,8 @@ a {
     overflow: hidden;
     padding: 5px;
 
-    .cancel-job {
+    .cancel-job,
+    .retry-job {
       display: none;
     }
 
@@ -94,7 +95,7 @@ a {
       .ended { display: none }
       .active { display: none }
       .cancelled { display: none }
-      .errored { display: none }
+      .errored { display: none }      
     }
 
     &[data-state="active"] {
@@ -125,6 +126,9 @@ a {
       .active { display: none }
       .ended { display: none }
       .errored { display: none }
+      .retry-job {
+        display: block;
+      }
     }
 
     &[data-state="errored"] {
@@ -134,6 +138,9 @@ a {
       .cancelled { display: none }
       .icon {
         background-color: #FFAAAA;
+      }
+      .retry-job {
+        display: block;
       }
     }
 

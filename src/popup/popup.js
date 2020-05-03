@@ -377,6 +377,18 @@ function cancelJob (jobId) {
 }
 
 /**
+ * Retry a failed or cancelled job.
+ */
+function retryJob (jobId) {
+  browser.runtime.sendMessage({
+    topic: 'ydb-retry-job',
+    data: {
+      jobId
+    }
+  });
+}
+
+/**
  * Update the youtube-dl executable.
  */
 function updateExe () {
@@ -460,6 +472,7 @@ function createJobRow (job) {
   let nodeEl = {
     divVideoUrl: node.querySelector('.video-url'),
     buttonCancelJob: node.querySelector('.cancel-job'),
+    buttonRetryJob: node.querySelector('.retry-job'),
     aViewOutput: node.querySelector('.view-output')
   };
 
@@ -469,6 +482,11 @@ function createJobRow (job) {
   // Add the handler for the cancel job button.
   nodeEl.buttonCancelJob.addEventListener('click', () => {
     cancelJob(Number(node.dataset.jobId));
+  });
+
+  // Add the handler for the retry job button.
+  nodeEl.buttonRetryJob.addEventListener('click', () => {
+    retryJob(Number(node.dataset.jobId));
   });
 
   // Add the handler for the view-output button.

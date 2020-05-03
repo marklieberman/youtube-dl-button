@@ -52,6 +52,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return onCreateJob(message);
   case 'ydb-cancel-job':
     return onCancelJob(message);
+  case 'ydb-retry-job':
+    return onRetryJob(message);
   case 'ydb-clean-jobs':
     return onCleanJobs(message);
   case 'ydb-update-exe':
@@ -244,6 +246,26 @@ function onCancelJob (message) {
   let job = findJobById(message.data.jobId);
   if (job) {
     job.cancel();
+    return Promise.resolve(job);
+  }
+  return Promise.resolve(false);
+}
+
+/**
+ * Retry a failed job.
+ */
+function onRetryJob (message) {
+  let job = findJobById(message.data.jobId);
+  if (job) {
+    if ((job.state === 'errored') || (job.state === 'cancelled')) {
+      // Put the job back into the queue.
+      job.setState('waiting');
+
+      // Start the job if below the concurrent jobs limit.
+      if (countActiveJobs() < settings.addon.concurrentJobsLimit) {
+        job.create();
+      }
+    }
     return Promise.resolve(job);
   }
   return Promise.resolve(false);
