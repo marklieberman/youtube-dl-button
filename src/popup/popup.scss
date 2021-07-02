@@ -1,8 +1,8 @@
 /* import custom bootstrap 4 */
 @import "bootstrap-popup";
 
-$popup-width: 600px;
-$popup-height: 400px;
+$popup-width: 599px;
+$popup-height: 399px;
 
 body {
   display: flex;
@@ -27,7 +27,9 @@ a {
   color: #000;
 }
 
-.grab-video {
+.grab-video {  
+  display: flex;
+  flex-flow: row nowrap;
   margin-bottom: 0;
 }
 
@@ -59,6 +61,10 @@ a {
     font-weight: bold;
     margin-top: 10px;
   }
+}
+
+#quick-job-buttons {
+  margin-left: 5px;
 }
 
 #settings-panel {

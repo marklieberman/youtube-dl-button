@@ -7,6 +7,8 @@ const el = {
   buttonMainDowpdown: document.getElementById('toggle-main-dropdown'),
   divMainDropdown: document.getElementById('main-dropdown'),
   divSwitchSetsList: document.getElementById('switch-sets-list'),
+  divQuickJobButtons: document.getElementById('quick-job-buttons'),
+  templateQuickJob: document.getElementById('quick-job-template'),
   settingsPanel: document.getElementById('settings-panel'),
   settingsTabs: {
     saving: {
@@ -262,19 +264,28 @@ function toggleMainDropdown () {
  * Populate the list of 'switch sets' that quickly configure the popup.
  */
 function populateSwitchSetEntries () {
-  let switchSetList = el.divSwitchSetsList;
-
+  let switchSetList = el.divSwitchSetsList,
+    profiles;
+  
   // Add a 'default' switch set that just clears all inputs.
   addSwitchSetEntry({ name: 'Default' });
 
   try {
-    // Append an entry for each switch set from settings.
-    JSON.parse(settings.addon.switchSets || '[]').forEach(addSwitchSetEntry);
+    profiles = JSON.parse(settings.addon.switchSets || '[]');
   } catch (error) {
     console.log('invalid JSON in switch sets', settings.addon.switchSets);
   }
 
+  // Append an entry for each switch set from settings.
+  profiles.forEach(profile => {
+    addSwitchSetEntry(profile);
+    if (profile.showButton) {
+      addQuickJobButton(profile);
+    }
+  });
+
   function addSwitchSetEntry (profile) {
+    // Add an item to the switch sets dropdown.
     let item = document.createElement('a');
     item.href = '#';
     item.innerText = profile.name;
@@ -282,7 +293,42 @@ function populateSwitchSetEntries () {
       loadSwitchProfile(profile);
       toggleMainDropdown();
     });
-    switchSetList.appendChild(item);    
+    switchSetList.appendChild(item);
+  }
+
+  function addQuickJobButton (profile) {
+    // Make the quick download buttons visible.
+    el.divQuickJobButtons.setAttribute('style', '');
+
+    // Add an item to the quick download buttons.
+    let template = document.importNode(el.templateQuickJob.content, true);
+    let button = template.firstElementChild;
+    button.setAttribute('title', `Quick download: ${profile.name}`);
+    button.addEventListener('click', () => {
+      loadSwitchProfile(profile);
+      createJob(false);
+    });
+
+    // Add an image icon or font icon.
+    if (profile.iconUrl) {
+      let img = document.createElement('img');
+      img.src = profile.iconUrl;
+      img.setAttribute('style', `
+        max-width: 16px; 
+        height: auto; 
+        object-fit: contain; 
+        ${profile.iconStyle || ''}`);
+      button.appendChild(img);
+    } else {
+      let i = document.createElement('i');
+      i.setAttribute('class', profile.iconClass || 'fa fa-arrow-circle-down');
+      if (profile.iconStyle) {
+        i.setAttribute('style', profile.iconStyle);
+      }
+      button.appendChild(i);
+    }
+
+    el.divQuickJobButtons.appendChild(template);
   }
 
   function loadSwitchProfile (profile) {
