@@ -19,6 +19,9 @@ namespace YoutubeDlButton
         {
             try
             {
+                // Create a cookie jar if cookies are provided.
+                Props.CreateCookieJar();
+
                 // Start an instance of youtube-dl.
                 process = Process.Start(new ProcessStartInfo
                 {
@@ -45,6 +48,11 @@ namespace YoutubeDlButton
             {
                 // Send the error message back to the addon.
                 Output?.Invoke(this, string.Format("Error starting youtube-dl process: {0}", e.Message));
+            }
+            finally
+            {
+                // Delete the cookie jar when finished.
+                Props.RemoveCookieJar();
             }
 
             // Invoke the ended callback when the process exits.

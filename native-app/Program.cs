@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -18,7 +19,9 @@ namespace YoutubeDlButton
 
         public static async Task Main()
         {
-            //Thread.Sleep(10000);
+#if DEBUG
+            Debugger.Launch();
+#endif
 
             while (true)
             {

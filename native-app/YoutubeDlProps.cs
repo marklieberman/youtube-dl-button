@@ -25,11 +25,34 @@ namespace YoutubeDlButton
         [JsonProperty("format")]
         public string Format { get; set; }
 
+        [JsonProperty("cookieJar")]
+        public string CookieJar { get; set; }
+
         [JsonProperty("customArgs")]
         public string CustomArgs { get; set; }
 
         [JsonProperty("restrictFilenames")]
         public bool RestrictFilenames { get; set; } = false;
+
+        private string cookieJarPath;
+
+        public void CreateCookieJar()
+        {
+            if (!string.IsNullOrEmpty(CookieJar))
+            {
+                cookieJarPath = Path.GetTempFileName();
+                File.WriteAllText(cookieJarPath, CookieJar);
+            }
+        }
+
+        public void RemoveCookieJar()
+        {
+            if (!string.IsNullOrEmpty(cookieJarPath) && File.Exists(cookieJarPath))
+            {
+                File.Delete(cookieJarPath);
+                cookieJarPath = null;                
+            }
+        }
 
         /// <summary>
         /// Create an argument string from the properties.
@@ -56,6 +79,11 @@ namespace YoutubeDlButton
             if (!string.IsNullOrEmpty(Format))
             {
                 args.Add(string.Format("--format {0}", Format));
+            }
+
+            if (!string.IsNullOrEmpty(cookieJarPath))
+            {
+                args.Add(string.Format("--cookies {0}", cookieJarPath));
             }
 
             if (!string.IsNullOrEmpty(CustomArgs))

@@ -125,7 +125,7 @@ async function saveOptions (event) {
   // Aquire or release optional permissions for cookies.
   let origins = new CookieOriginsHelper();
   if (el.inputSendCookiesYoutube.checked) {
-    this.requestOrigin('*://youtube.com/*');
+    origins.requestOrigin('*://youtube.com/*');
   }
   if (!(await origins.applyPermissions())) {
     // Permissions rejected; remove all permissions and disable features.
