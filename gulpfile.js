@@ -55,7 +55,7 @@ function distTask () {
 
 exports.sass = sassTask;
 exports.lint = lintTask;
-exports.dist = distTask;
 
 exports.watch = gulp.series(sassTask, watchFiles);
 exports.default = gulp.series(lintTask, watchFiles);
+exports.dist = gulp.series(lintTask, sassTask, distTask);
