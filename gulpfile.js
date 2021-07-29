@@ -1,7 +1,7 @@
 'use strict';
 
 var gulp   = require('gulp'),
-    jshint = require('gulp-jshint'),
+    eslint = require('gulp-eslint'),
     sass   = require('gulp-sass'),
     zip    = require('gulp-zip');
 
@@ -40,8 +40,9 @@ function sassTask () {
 
 function lintTask () {
   return gulp.src(sources.js)
-    .pipe(jshint())
-    .pipe(jshint.reporter('jshint-stylish'));
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
 }
 
 function distTask () {

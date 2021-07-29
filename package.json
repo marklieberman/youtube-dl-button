@@ -10,12 +10,11 @@
   "author": "Mark Lieberman",
   "license": "GPL-3.0",
   "devDependencies": {
+    "eslint": "^7.31.0",
     "gulp": "^4.0.2",
-    "gulp-jshint": "^2.1.0",
+    "gulp-eslint": "^6.0.0",
     "gulp-sass": "^4.0.2",
-    "gulp-zip": "^5.0.1",
-    "jshint": "^2.11.0",
-    "jshint-stylish": "^2.2.1"
+    "gulp-zip": "^5.0.1"
   },
   "dependencies": {
     "bootstrap": "^4.1.1"
