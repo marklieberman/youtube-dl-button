@@ -85,7 +85,7 @@ promises.push(browser.tabs.executeScript({
     };
   });
 }).catch(error => {
-  console.log('failed to get active tab URL');
+  console.log('failed to get active tab URL', error);
   return null;
 }));
 
@@ -186,7 +186,7 @@ el.buttonCleanUp.addEventListener('click', () => {
 // Add event listeners to settings tab headers.
 Object.keys(el.settingsTabs).forEach(key => {
   let a = el.settingsTabs[key].header;
-  a.addEventListener('click', (event) => {
+  a.addEventListener('click', () => {
     openSettingsTab(key);
   });
 });
@@ -386,7 +386,7 @@ function validateCreateJob () {
 function createJob (bestaudio) {
   // Ensure that required settings have been configured.
   if (!settings.props.exePath || !settings.props.saveIn) {
-    window.alert("You must finish configuring the addon.");
+    window.alert('You must finish configuring the addon.');
     browser.runtime.openOptionsPage().then(() => window.close());
     return;
   }
@@ -587,7 +587,7 @@ function fileName (path) {
   if (!~index) {
     index = path.lastIndexOf('/');
   }
-  if (!!~index) {
+  if (~index) {
     return path.substring(index + 1);
   }
   return path;

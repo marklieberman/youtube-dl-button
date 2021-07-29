@@ -1,14 +1,71 @@
 'use strict';
 
+/**
+ * Helper for managing optional cookies and host permissions.
+ */
+class CookieOriginsHelper {
+  constructor () {
+    this.remaining = [
+      '*://youtube.com/*'
+    ];
+    this.requested = [];
+  }
+
+  /**
+   * Add an origin to request.
+   */
+  requestOrigin (origin) {
+    this.remaining = this.remaining.filter(v => v !== origin);
+    this.requested.push(origin);
+  }
+
+  /**
+   * Prompt for permissions.
+   */
+  async applyPermissions () {
+    let granted = true;
+    if (this.requested.length) {
+      // Aquire all requested host permissions.
+      granted = await browser.permissions.request({
+        origins: this.requested,
+        permissions: [ 'cookies' ]
+      });
+    } else {
+      // Nothing requested; release cookies.
+      await browser.permissions.remove({
+        permissions: [ 'cookies' ]
+      });
+    }
+    if (this.remaining.length) {
+      // Remove all unused host permissions.
+      await browser.permissions.remove({
+        origins: this.remaining
+      });
+    }
+    return granted;
+  }
+
+  /**
+   * Remove all permissions.
+   */
+  async removeAllPermissions () {
+    await browser.permissions.remove({
+      origins: this.remaining.concat(this.requested),
+      permissions: [ 'cookies' ],
+    });
+  }
+}
+
 const el = {
   optionsForm: document.getElementById('options-form'),
   inputExePath: document.getElementById('exe-path'),
-  inputSaveIn: document.getElementById('save-in'),
-  inputTemplate: document.getElementById('template'),
-  inputFormat: document.getElementById('format'),
-  inputCustomArgs: document.getElementById('custom-args'),
-  inputQuickAudioFormat: document.getElementById('quick-audio-format'),
+  inputSaveIn: document.getElementById('save-in'),  
   inputConcurrentJobsLimit: document.getElementById('concurrent-jobs-limit'),
+  inputFormat: document.getElementById('format'),  
+  inputQuickAudioFormat: document.getElementById('quick-audio-format'),
+  inputTemplate: document.getElementById('template'),  
+  inputCustomArgs: document.getElementById('custom-args'),
+  inputSendCookiesYoutube: document.getElementById('send-cookies-youtube'),
   textareaSwitchSets: document.getElementById('switch-sets')
 };
 
@@ -22,8 +79,9 @@ browser.storage.local.get({
   el.inputSaveIn.value = results.props.saveIn || '';
   el.inputQuickAudioFormat.value = results.addon.quickAudioFormat || '';
   el.inputConcurrentJobsLimit.value = results.addon.concurrentJobsLimit || 1;
+  el.inputSendCookiesYoutube.checked = !!results.addon.sendCookiesYoutube;
   el.textareaSwitchSets.value = results.addon.switchSets || '[]';
-
+  
   // Switches
   el.inputTemplate.value = results.props.template || '';
   el.inputFormat.value = results.props.format || '';
@@ -56,18 +114,31 @@ el.textareaSwitchSets.addEventListener('input', () => {
 el.optionsForm.addEventListener('submit', saveOptions);
 
 // Save the options to local storage.
-function saveOptions (event) {
-  if (el.optionsForm.checkValidity() === false) {
-    event.preventDefault();
-    event.stopPropagation();
+async function saveOptions (event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!el.optionsForm.checkValidity()) {
     return;
   }
 
-  return browser.storage.local.set({
+  // Aquire or release optional permissions for cookies.
+  let origins = new CookieOriginsHelper();
+  if (el.inputSendCookiesYoutube.checked) {
+    this.requestOrigin('*://youtube.com/*');
+  }
+  if (!(await origins.applyPermissions())) {
+    // Permissions rejected; remove all permissions and disable features.
+    origins.removeAllPermissions();
+    el.inputSendCookiesYoutube.checked = false;
+  }
+
+  await browser.storage.local.set({
     addon: {
       quickAudioFormat: el.inputQuickAudioFormat.value,
       concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value),
-      switchSets: el.textareaSwitchSets.value
+      switchSets: el.textareaSwitchSets.value,
+      sendCookiesYoutube: el.inputSendCookiesYoutube.checked
     },
     props: {
       exePath: el.inputExePath.value,
@@ -77,4 +148,6 @@ function saveOptions (event) {
       customArgs: el.inputCustomArgs.value
     }
   });
+
+  alert('Settings have been saved');
 }

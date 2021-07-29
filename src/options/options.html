@@ -18,98 +18,150 @@
 
         <div class="row">
           <div class="col-md-12">
-            <h5>Setup</h5>
-            <div class="form-group">
-              <label for="exePath">Path to youtube-dl executable</label>
-              <input class="form-control" type="text" id="exe-path"
-                     required></input>
-              <small class="form-text text-muted">
-                Provide the absolute path to youtube-dl.
-              </small>
-              <small class="invalid-feedback">
-                This is required or the addon cannot function.
-              </small>
-            </div>
-            <div class="form-group">
-              <label for="save-in">Default download location</label>
-              <input class="form-control" type="text" id="save-in"
-                     required></input>
-              <small class="form-text text-muted">
-                Provide the absolute path to a folder where downloads will be saved.
-              </small>
-              <div class="invalid-feedback">
-                This field is required.
+            <div class="form-row">
+              <!-- exe path -->
+              <div class="form-group col-md-12">
+                <label for="exePath">Path to youtube-dl executable</label>
+                <input class="form-control" type="text" id="exe-path"
+                       required></input>
+                <small class="form-text text-muted">
+                  Provide the absolute path to youtube-dl.
+                </small>
+                <small class="invalid-feedback">
+                  This is required or the addon cannot function.
+                </small>
               </div>
             </div>
-            <div class="form-group">
-              <label for="concurrent-jobs-limit">Concurrent download limit</label>
-              <input class="form-control" type="number" id="concurrent-jobs-limit"
-                     step="1" min="1" max="10"></input>
-              <small class="form-text text-muted">
-                The number of downloads that can run simultaneously.
-              </small>
+
+            <div class="form-row">
+              <!-- save path -->
+              <div class="form-group col-md-9">
+                <label for="save-in">Default download location</label>
+                <input class="form-control" type="text" id="save-in"
+                       required></input>
+                <small class="form-text text-muted">
+                  Provide the absolute path to a folder where downloads will be saved.
+                </small>
+                <div class="invalid-feedback">
+                  This field is required.
+                </div>
+              </div>
+
+              <!-- concurrent downloads -->
+              <div class="form-group col-md-3">
+                <label for="concurrent-jobs-limit">Concurrent downloads</label>
+                <input class="form-control" type="number" id="concurrent-jobs-limit"
+                      step="1" min="1" max="10"></input>
+                <small class="form-text text-muted">
+                  The number of downloads that can run simultaneously.
+                </small>
+              </div>
             </div>
 
-            <h5>Switches</h5>
-            <div class="form-group">
-              <label for="format">
-                Default format
-                <a class="text-muted"
-                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
-                   target="_blank"
-                   title="View youtube-dl documentation">
-                  <i class="fa fa-info-circle"></i>
-                </a>
-              </label>
-              <input class="form-control" type="text" id="format"
-                     list="formats"></input>
-              <datalist id="formats">
-                <option value="bestvideo+bestaudio/best"></option>
-                <option value="best"></option>
-                <option value="bestvideo"></option>
-                <option value="bestaudio"></option>
-                <option value="worst"></option>
-                <option value="worstvideo"></option>
-                <option value="worstaudio"></option>
-              </datalist>
-            </div>
-            <div class="form-group">
-              <label for="save-in">
-                Quick download audio format
-              </label>
-              <input class="form-control" type="text" id="quick-audio-format"></input>
-              <small class="form-text text-muted">
-                The format to download when the <i class="fa fa-music"></i> button is pressed.
-              </small>
-            </div>
-            <div class="form-group">
-              <label for="template">
-                Default naming template
-                <a class="text-muted"
-                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
-                   target="_blank"
-                   title="View youtube-dl documentation">
-                  <i class="fa fa-info-circle"></i>
-                </a>
-              </label>
-              <input class="form-control" type="text" id="template"></input>
-            </div>
-            <div class="form-group">
-              <label for="template">
-                Custom youtube-dl arguments
-              </label>
-              <input class="form-control" type="text" id="custom-args"></input>
-              <small class="form-text text-muted">
-                Additional arguments to pass to youtube-dl.
-              </small>
+            <h5>Switches</h5>            
+
+            <div class="form-row">
+              <!-- format -->
+              <div class="form-group col-md-6">
+                <label for="format">
+                  Default format
+                  <a class="text-muted"
+                    href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
+                    target="_blank"
+                    title="View youtube-dl documentation">
+                    <i class="fa fa-info-circle"></i>
+                  </a>
+                </label>
+                <input class="form-control" type="text" id="format"
+                      list="formats"></input>
+                <small class="form-text text-muted">
+                  The format to download when the <i class="fa fa-download"></i> button is pressed.
+                </small>
+                <datalist id="formats">
+                  <option value="bestvideo+bestaudio/best"></option>
+                  <option value="best"></option>
+                  <option value="bestvideo"></option>
+                  <option value="bestaudio"></option>
+                  <option value="worst"></option>
+                  <option value="worstvideo"></option>
+                  <option value="worstaudio"></option>
+                </datalist>
+              </div>
+
+              <!-- audio format -->
+              <div class="form-group col-md-6">
+                <label for="save-in">
+                  Quick download audio format
+                </label>
+                <input class="form-control" type="text" id="quick-audio-format"></input>
+                <small class="form-text text-muted">
+                  The format to download when the <i class="fa fa-music"></i> button is pressed.
+                </small>
+              </div>
             </div>
 
-            <h5>Quick Configure</h5>            
-            <div class="form-group">
-              <textarea class="form-control" id="switch-sets"></textarea>              
-              <small class="form-text text-muted">
-                Use the dropdown menu in the popup to quickly apply settings defined here.
-              </small>
+            <div class="form-row">
+              <!-- template -->
+              <div class="form-group col-md-12">
+                <label for="template">
+                  Default naming template
+                  <a class="text-muted"
+                     href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
+                     target="_blank"
+                     title="View youtube-dl documentation">
+                    <i class="fa fa-info-circle"></i>
+                  </a>
+                </label>
+                <input class="form-control" type="text" id="template"></input>
+                <small class="form-text text-muted">
+                  Template to apply when naming downloaded files.
+                </small>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <!-- custom arguments -->
+              <div class="form-group col-md-12">
+                <label for="template">
+                  Custom youtube-dl arguments
+                </label>
+                <input class="form-control" type="text" id="custom-args"></input>
+                <small class="form-text text-muted">
+                  Additional arguments to pass to youtube-dl.
+                </small>
+              </div>
+            </div>
+
+            <h5>Cookies</h5>
+            <div class="alert alert-warning">
+              This add-on requires additional permissions to read cookies. You will be prompted to grant these 
+              permissions when you save settings.
+            </div>
+
+            <div class="form-row">
+              <!-- cookies: youtube -->
+              <div class="form-group col-md-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="send-cookies-youtube">
+                  <label class="form-check-label text-dark" for="send-cookies-youtube">
+                    Send cookies for YouTube video downloads.
+                    This will allow you to download age restricted videos if you are signed in to YouTube.
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+            <h5>Quick Configure</h5>       
+            
+            <div class="form-row">
+              <!-- quick configure -->
+              <div class="form-group col-md-12">
+                <textarea class="form-control" id="switch-sets" rows="6"></textarea>              
+                <small class="form-text text-muted">
+                  Use the dropdown menu in the popup to quickly apply settings defined here.
+                </small>
+              </div>
             </div>
           </div><!-- /col -->
         </div><!-- /row -->

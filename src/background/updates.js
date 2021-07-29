@@ -19,9 +19,9 @@
   }
 
   // Initialize the addon when first installed.
-  function onInstalled (details) {
+  function onInstalled () {
     console.log('youtube-dl button installed');
-    return browser.runtime.getPlatformInfo().then(platformInfo => {
+    return browser.runtime.getPlatformInfo().then(() => {
       let settings = {
         addon: {
           quickAudioFormat: 'bestaudio',
@@ -42,7 +42,7 @@
   }
 
   // Update the settings when the addon is updated.
-  function onUpdated (details) {
+  function onUpdated () {
     // Nothing here yet.
   }
 

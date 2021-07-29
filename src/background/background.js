@@ -8,7 +8,8 @@ const state = {
 
 const settings = {
   addon: {
-    concurrentJobsLimit: 1
+    concurrentJobsLimit: 1,
+    sendCookiesYoutube: false
   }
 };
 
@@ -21,7 +22,8 @@ browser.storage.local.get(settings).then(results => {
   });
 });
 
-// Events -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+// Events 
 
 /**
  * Invoked when settings are changed.
@@ -90,7 +92,8 @@ function onPortDisconnect (port) {
   state.port = null;
 }
 
-// Model ------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+// Model 
 
 class Job {
   constructor (props) {
@@ -115,21 +118,24 @@ class Job {
     // Send a create-job message to the native-app.
     openPort();
     return browser.storage.local.get({ props: {} }).then(result => {
-      state.port.postMessage({
-        topic: 'create-job',
-        data: {
-          jobId: this.id,
-          // Merge the default props and the job props.
-          props: Object.assign({}, result.props, this.props)
-        }
-      });
-
-      // Flag this job as active.
-      this.state = 'active';
-
-      // Make the icon blue because a job is running.
-      browser.browserAction.setIcon({
-        path: 'icons/film-blue.svg'
+      // Get a cookie jar for the job.
+      return getCookieJarForVideo(this.props.videoUrl).then(cookieJar => {
+        state.port.postMessage({
+          topic: 'create-job',
+          data: {
+            jobId: this.id,
+            // Merge the default props and the job props.
+            props: Object.assign({ cookieJar }, result.props, this.props)
+          }
+        });
+  
+        // Flag this job as active.
+        this.state = 'active';
+  
+        // Make the icon blue because a job is running.
+        browser.browserAction.setIcon({
+          path: 'icons/film-blue.svg'
+        });
       });
     });
   }
@@ -173,7 +179,40 @@ class Job {
   }
 }
 
-// Functions --------------------------------------------------------------------------------------------------------------------
+class CookieJar {
+  constructor () {
+    this.cookies = [];
+  }
+
+  isEmpty () {
+    return (this.cookies.length === 0);
+  }
+
+  addAll (cookies) {
+    this.cookies.push(...cookies);
+  }
+
+  toString () {
+    let newline = '\r\n', 
+        // Send this for session cookies.
+        sessionExpirationDate = new Date().getTime() + 3600000;
+    return this.cookies.reduce((data, cookie) => {
+      let entry = `${cookie.domain}\t`;
+      entry += `${cookie.hostOnly?'true':'false'}\t`;
+      entry += `${cookie.path}\t`;
+      entry += `${cookie.secure?'true':'false'}\t`;
+      entry += `${cookie.expirationDate||sessionExpirationDate}\t`;
+      entry += `${cookie.name}\t`;
+      entry += `${cookie.value}`;
+      data.push(entry);
+      return data;
+    }, [ '# HTTP Cookie File' ]).join(newline);
+  }
+
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Functions 
 
 /**
  * Open a port to the native-app.
@@ -281,7 +320,7 @@ function onRetryJob (message) {
 /**
  * Create a job to update youtube-dl.
  */
-function onUpdateExe (message) {
+function onUpdateExe () {
   let job = new Job({
     videoUrl: 'Update youtube-dl.exe executable',
     updateExe: true
@@ -294,7 +333,7 @@ function onUpdateExe (message) {
 /**
  * Remove ended jobs from the job list.
  */
-function onCleanJobs (message) {
+function onCleanJobs () {
   state.jobs
     .filter(job => (job.state !== 'waiting' && job.state !== 'active'))
     .forEach(job => {
@@ -363,4 +402,29 @@ function onJobEnded (message) {
       path: null
     });
   }
+}
+
+/**
+ * Get a cookie jar containing cookies for the video domain.
+ */
+function getCookieJarForVideo (videoUrl) {
+  try {
+    let url = new URL(videoUrl);
+    // Cookies for YouTube.
+    if (url.host.endsWith('youtube.com')) {
+      if (settings.addon.sendCookiesYoutube) {
+        return browser.cookies.getAll({
+          domain: 'youtube.com'
+        }).then(cookies => {
+          let cookieJar = new CookieJar();
+          cookieJar.addAll(cookies);
+          return cookieJar.isEmpty() ? null : cookieJar.toString();
+        });
+      }
+    }
+  } catch (error) {
+    console.log('could not determine domain for cookie jar');
+  }
+
+  return Promise.resolve(null);
 }

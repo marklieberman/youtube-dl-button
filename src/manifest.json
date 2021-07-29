@@ -24,6 +24,11 @@
     "storage"
   ],
 
+  "optional_permissions": [
+    "cookies",
+    "*://youtube.com/*"
+  ],
+
   "options_ui": {
     "open_in_tab": true,
     "browser_style": false,
