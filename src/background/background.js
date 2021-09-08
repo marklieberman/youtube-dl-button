@@ -196,8 +196,11 @@ class CookieJar {
     let newline = '\r\n', 
         // Send this for session cookies.
         sessionExpirationDate = new Date().getTime() + 3600000;
+        
     return this.cookies.reduce((data, cookie) => {
-      let entry = `${cookie.domain}\t`;
+      // yt-dlp will reject leading dot on domain.
+      let domain = cookie.domain.startsWith('.') ? cookie.domain.slice(1) : cookie.domain;      
+      let entry = `${domain}\t`;      
       entry += `${cookie.hostOnly?'true':'false'}\t`;
       entry += `${cookie.path}\t`;
       entry += `${cookie.secure?'true':'false'}\t`;
