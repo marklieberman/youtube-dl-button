@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace YoutubeDlButton
 {
     class YoutubeDlRunner
     {
         private Process process;
+        private bool cancel = false;
 
         public int JobId { get; set; }
 
@@ -41,8 +41,15 @@ namespace YoutubeDlButton
                 process.ErrorDataReceived += OnOutputReceived;
                 process.BeginErrorReadLine();
 
-                // Block until the process is done.
-                process.WaitForExit();
+                if (cancel)
+                {
+                    throw new Exception("Job cancelled");
+                }
+                else
+                {
+                    // Block until the process is done.
+                    process.WaitForExit();
+                }
             }
             catch (Exception e)
             {
@@ -61,9 +68,11 @@ namespace YoutubeDlButton
 
         public void Cancel()
         {
+            cancel = true;
             if (!process?.HasExited ?? false)
             {
-                process.Kill();
+                // process.Kill() was sufficient for youtube-dl, but yt-dlp uses child processes.
+                ProcessKiller.KillWithChildren(process.Id);
             }
         }
 
@@ -74,6 +83,7 @@ namespace YoutubeDlButton
                 Debug.WriteLine(e.Data);
                 Output?.Invoke(this, e.Data);
             }
-        }        
+        }
+        
     }
 }

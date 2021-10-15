@@ -134,11 +134,11 @@ namespace YoutubeDlButton
                 runner.Start();
             }, TaskCreationOptions.LongRunning);
 
-            task.Start();
-
             jobs.TryAdd(runner.JobId, runner);
 
-            // Send na message back with the job commandline arguments.
+            task.Start();
+
+            // Send a message back with the job commandline arguments.
             Write(new Message<JobOutput>("job-started", new JobOutput
             {
                 JobId = message.Data.JobId,
@@ -160,6 +160,15 @@ namespace YoutubeDlButton
             if (runner != null)
             {
                 runner.Cancel();
+            } 
+            else
+            {
+                // Unknown job.
+                Write(new Message<JobEnded>("job-ended", new JobEnded
+                {
+                    JobId = message.Data.JobId,
+                    ExitCode = 1
+                }));
             }
         }
     }
