@@ -90,6 +90,13 @@ function onPortDisconnect (port) {
     console.log('disconnected with error', port.error);
   }
   state.port = null;
+
+  // Fail all ongoing jobs.
+  state.jobs.forEach(job => {
+    if ((job.state === 'waiting') || (job.state === 'active')) {
+      job.ended(1, 'native app disconnected unexpectedly.');
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -145,6 +152,7 @@ class Job {
    */
   cancel () {
     this.cancelRequested = true;
+    this.append('Cancel requested.');
     if (this.state === 'waiting') {
       this.setState('cancelled');
       this.append('Job cancelled.');
@@ -155,19 +163,21 @@ class Job {
           jobId: this.id,
         }
       });      
-    }
-    
+    }    
   }
 
   /**
    * Flag the job as ended.
    */
-  ended (exitCode) {
+  ended (exitCode, detail) {
     if (this.cancelRequested) {
       this.setState('cancelled');
       this.append('Job cancelled.');
     } else {
       this.setState((exitCode > 0) ? 'errored' : 'ended');
+      if (detail) {
+        this.append(`Job ended with error: ${detail}`);
+      }
     }
   }
 
