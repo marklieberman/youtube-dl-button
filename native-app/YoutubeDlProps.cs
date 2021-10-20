@@ -36,6 +36,9 @@ namespace YoutubeDlButton
 
         private string cookieJarPath;
 
+        /// <summary>
+        /// Write the CookieJar to a temporary file.
+        /// </summary>
         public void CreateCookieJar()
         {
             if (!string.IsNullOrEmpty(CookieJar))
@@ -45,6 +48,9 @@ namespace YoutubeDlButton
             }
         }
 
+        /// <summary>
+        /// Delete the temporary CookieJar file.
+        /// </summary>
         public void RemoveCookieJar()
         {
             if (!string.IsNullOrEmpty(cookieJarPath) && File.Exists(cookieJarPath))

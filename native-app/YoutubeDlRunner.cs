@@ -3,10 +3,10 @@ using System.Diagnostics;
 
 namespace YoutubeDlButton
 {
-    class YoutubeDlRunner
+    class YoutubeDlRunner : IDisposable
     {
         private Process process;
-        private bool cancel = false;
+        private bool cancelled = false;
 
         public int JobId { get; set; }
 
@@ -15,8 +15,21 @@ namespace YoutubeDlButton
         public event Action<YoutubeDlRunner, string> Output;
         public event Action<YoutubeDlRunner, int> Ended;
 
+        /// <summary>
+        /// Start a new instance of youtube-dl.exe.
+        /// </summary>
         public void Start()
         {
+            if (cancelled)
+            {
+                throw new InvalidOperationException("Operation was cancelled");
+            }
+
+            if (process != null)
+            {
+                throw new InvalidOperationException("Already started");
+            }
+
             try
             {
                 // Create a cookie jar if cookies are provided.
@@ -30,26 +43,20 @@ namespace YoutubeDlButton
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardError = true,
+                    // This is necessary to avoid hanging youtube-dl.exe even though we never use it.
+                    RedirectStandardInput = true
                 });
 
-                // Asynchronously read from process standard output.
+                // Get notified when the process exits.
+                process.EnableRaisingEvents = true;
+                process.Exited += OnProcessExited;
+                
+                // Asynchronously read from process output.
                 process.OutputDataReceived += OnOutputReceived;
-                process.BeginOutputReadLine();
-
-                // Asynchronously read from process standard error.
                 process.ErrorDataReceived += OnOutputReceived;
+                process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
-
-                if (cancel)
-                {
-                    throw new Exception("Job cancelled");
-                }
-                else
-                {
-                    // Block until the process is done.
-                    process.WaitForExit();
-                }
             }
             catch (Exception e)
             {
@@ -61,21 +68,41 @@ namespace YoutubeDlButton
                 // Delete the cookie jar when finished.
                 Props.RemoveCookieJar();
             }
+        }
 
+        /// <summary>
+        /// Terminate the youtube-dl.exe process if it is running. The Ended event will not be invoked.
+        /// </summary>
+        public void Cancel()
+        {
+            if (!cancelled)
+            {
+                cancelled = true;
+
+                // The caller may assume the process ended.
+                Output = null;
+                Ended = null;
+
+                if (!process?.HasExited ?? false)
+                {
+                    // process.Kill() was sufficient for youtube-dl, but yt-dlp uses child processes.
+                    ProcessKiller.KillWithChildren(process.Id);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Invoked when youtube-dl.exe exits.
+        /// </summary>
+        private void OnProcessExited(object sender, EventArgs e)
+        {
             // Invoke the ended callback when the process exits.
             Ended?.Invoke(this, process?.ExitCode ?? 1);
         }
 
-        public void Cancel()
-        {
-            cancel = true;
-            if (!process?.HasExited ?? false)
-            {
-                // process.Kill() was sufficient for youtube-dl, but yt-dlp uses child processes.
-                ProcessKiller.KillWithChildren(process.Id);
-            }
-        }
-
+        /// <summary>
+        /// Invoked when youtube-dl.exe writes to its stdout or stderr.
+        /// </summary>
         private void OnOutputReceived(object sender, DataReceivedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.Data))
@@ -84,6 +111,14 @@ namespace YoutubeDlButton
                 Output?.Invoke(this, e.Data);
             }
         }
-        
+
+        public void Dispose()
+        {
+            if (process != null)
+            {
+                process.Dispose();
+                process = null;
+            }
+        }
     }
 }

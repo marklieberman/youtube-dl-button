@@ -2,10 +2,8 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using YoutubeDlButton.Messages;
 
@@ -81,6 +79,7 @@ namespace YoutubeDlButton
                 stdout.Write(jsonBytes, 0, jsonBytes.Length);
 
                 stdout.Flush();
+                stdout.Close();
             }
         }
 
@@ -127,16 +126,14 @@ namespace YoutubeDlButton
                     ExitCode = exitCode
                 }));
 
-                jobs.TryRemove(r.JobId, out _);
-            };
+                r.Dispose();
 
-            var task = new Task(() => {
-                runner.Start();
-            }, TaskCreationOptions.LongRunning);
+                jobs.TryRemove(r.JobId, out _);                
+            };
 
             jobs.TryAdd(runner.JobId, runner);
 
-            task.Start();
+            runner.Start();
 
             // Send a message back with the job commandline arguments.
             Write(new Message<JobOutput>("job-started", new JobOutput
@@ -144,10 +141,6 @@ namespace YoutubeDlButton
                 JobId = message.Data.JobId,
                 Output = message.Data.Props.ToArguments()
             }));
-
-
-            // This is somehow critical to prevent youtube-dl from hanging.
-            Thread.Sleep(2000);
         }
 
         /// <summary>
@@ -156,20 +149,28 @@ namespace YoutubeDlButton
         /// <param name="message"></param>
         static void OnCancelJob(Message<CancelJob> message)
         {
+            // youtube-dl does not document any exist codes besides 0 and 1.
+            // To avoid leaving orphaned jobs in the frontend, we will report the following extra codes:
+            //   255: The job was not found.
+            //   254: The job was found and cancelled.
+            var exitCode = 255;
+
             jobs.TryGetValue(message.Data.JobId, out YoutubeDlRunner runner);
             if (runner != null)
             {
+                // Found the job.
+                exitCode = 254;
                 runner.Cancel();
+                runner.Dispose();
+                jobs.TryRemove(runner.JobId, out _);
             } 
-            else
+
+            // Tell the frontend the cancellation request was handled.
+            Write(new Message<JobEnded>("job-ended", new JobEnded
             {
-                // Unknown job.
-                Write(new Message<JobEnded>("job-ended", new JobEnded
-                {
-                    JobId = message.Data.JobId,
-                    ExitCode = 1
-                }));
-            }
+                JobId = message.Data.JobId,
+                ExitCode = exitCode
+            }));
         }
     }
 }
