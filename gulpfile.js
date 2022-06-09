@@ -11,6 +11,7 @@ var sources = {
   ],
   sass: [
     'src/common/bootstrap.scss',
+    'src/options/options.scss',
     'src/popup/popup.scss'
   ],
   watch: {

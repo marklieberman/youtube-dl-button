@@ -56,67 +56,145 @@ class CookieOriginsHelper {
   }
 }
 
+const divToPropsMap = new WeakMap();
+
 const el = {
   optionsForm: document.getElementById('options-form'),
+  buttonAddProps: document.getElementById('add-props'),
+  buttonBackupSettings: document.getElementById('backup-settings'),
+  fileRestoreSettings: document.getElementById('restore-settings'),
   inputExePath: document.getElementById('exe-path'),
-  inputSaveIn: document.getElementById('save-in'),  
   inputConcurrentJobsLimit: document.getElementById('concurrent-jobs-limit'),
-  inputFormat: document.getElementById('format'),  
-  inputQuickAudioFormat: document.getElementById('quick-audio-format'),
-  inputTemplate: document.getElementById('template'),  
-  inputCustomArgs: document.getElementById('custom-args'),
   inputSendCookiesYoutube: document.getElementById('send-cookies-youtube'),
-  textareaSwitchSets: document.getElementById('switch-sets')
+  divPropsList: document.getElementById('props-list'),
+  templateProps: document.getElementById('props-template')
 };
 
-// Restore the options from local stoage.
 browser.storage.local.get({
-  addon: {},
-  props: {}
-}).then(results => {
-  // Setup
-  el.inputExePath.value = results.props.exePath || '';
-  el.inputSaveIn.value = results.props.saveIn || '';
-  el.inputQuickAudioFormat.value = results.addon.quickAudioFormat || '';
-  el.inputConcurrentJobsLimit.value = results.addon.concurrentJobsLimit || 1;
-  el.inputSendCookiesYoutube.checked = !!results.addon.sendCookiesYoutube;
-  el.textareaSwitchSets.value = results.addon.switchSets || '[]';
-  
-  // Switches
-  el.inputTemplate.value = results.props.template || '';
-  el.inputFormat.value = results.props.format || '';
-  el.inputCustomArgs.value = results.props.customArgs || '';
-});
-
-// Do some basic validation on the switch sets.
-el.textareaSwitchSets.addEventListener('input', () => {
-  try {    
-    let value = JSON.parse(el.textareaSwitchSets.value);
-    if (!Array.isArray(value)) {
-      el.textareaSwitchSets.setCustomValidity('Must be an array.');
-    } else {
-      el.textareaSwitchSets.setCustomValidity('');
-      for (let i = 0; i < value.length; i++) {
-        if (!value[i].name) {
-          el.textareaSwitchSets.setCustomValidity(`Item ${i} must have a name property`);
-          break;
-        }
-      }
-    }
-  } catch (error) {
-    el.textareaSwitchSets.setCustomValidity('Not valid JSON.');    
-  }
-
-  el.textareaSwitchSets.reportValidity();
-});
+  exePath: '',
+  concurrentJobsLimit: 1,
+  sendCookiesYoutube: false,
+  props: []
+}).then(populateSettings);
 
 // Bind event handlers to the form.
+el.buttonAddProps.addEventListener('click', () => createPropsConfig({}).scrollIntoView());
+el.buttonBackupSettings.addEventListener('click', () => backupSettings());
 el.optionsForm.addEventListener('submit', saveOptions);
+el.fileRestoreSettings.addEventListener('change', () => restoreSettings());
+
+function populateSettings (results) {
+  // Restore the options from local stoage.
+  el.divPropsList.innerText = '';  
+  el.inputExePath.value = results.exePath || '';
+  el.inputConcurrentJobsLimit.value = results.concurrentJobsLimit || 1;
+  el.inputSendCookiesYoutube.checked = !!results.sendCookiesYoutube;
+  results.props.forEach(createPropsConfig);
+}
+
+function createPropsConfig (props, index = -1) {
+  let template = document.importNode(el.templateProps.content, true);
+  let tpl = {
+    divProps: template.firstElementChild,    
+    buttonDelete: template.querySelector('button.delete'),    
+    checkInheritDefault: template.querySelector('[name="inherit-default"]'),
+    divIconPreview: template.querySelector('.icon-preview'),
+    inputCustomArgs: template.querySelector('[name="custom-args"]'),
+    inputFormat: template.querySelector('[name="format"]'),
+    inputIcon: template.querySelector('[name="icon"]'),    
+    inputName: template.querySelector('[name="name"]'),    
+    inputPostProcessScript: template.querySelector('[name="post-process-script"]'),
+    inputSaveIn: template.querySelector('[name="save-in"]'),    
+    inputTemplate: template.querySelector('[name="template"]')
+  };
+  tpl.checkInheritDefault.checked = (props.inheritDefault === undefined) ? true : !!props.inheritDefault;
+  tpl.inputCustomArgs.value = props.customArgs || '';
+  tpl.inputFormat.value = props.format || '';
+  tpl.inputIcon.value = props.icon || '';    
+  tpl.inputName.value = props.name || '';
+  tpl.inputPostProcessScript.value = props.postProcessScript || '';  
+  tpl.inputSaveIn.value = props.saveIn || '';
+  tpl.inputTemplate.value = props.template || '';  
+    
+  // Special cases for the built in parameter sets.
+  if (index === 0) {
+    tpl.divProps.classList.add('default-props');
+    tpl.buttonDelete.setAttribute('disabled', 'true');
+    tpl.inputName.setAttribute('disabled', 'true');
+    tpl.inputSaveIn.setAttribute('required', 'true');
+    tpl.checkInheritDefault.checked = false;
+  } else
+  if (index === 1) {
+    tpl.divProps.classList.add('audio-props');
+    tpl.buttonDelete.setAttribute('disabled', 'true');
+    tpl.inputName.setAttribute('disabled', 'true');
+  } else {
+    tpl.divProps.classList.add('custom-props');
+  }
+
+  // Configure the form.
+  updateIconPreview(tpl);
+  updatePropsConfigValidation(tpl);
+
+  // Bind event handlers to the form.
+  tpl.buttonDelete.addEventListener('click', () => tpl.divProps.parentNode.removeChild(tpl.divProps));
+  tpl.inputIcon.addEventListener('change', () => updateIconPreview(tpl));
+  tpl.checkInheritDefault.addEventListener('change', () => updatePropsConfigValidation(tpl));  
+
+  el.divPropsList.appendChild(template);
+  divToPropsMap.set(tpl.divProps, () => ({
+    inheritDefault: tpl.checkInheritDefault.checked,
+    customArgs: tpl.inputCustomArgs.value,
+    format: tpl.inputFormat.value,
+    icon: tpl.inputIcon.value,    
+    name: tpl.inputName.value,
+    postProcessScript: tpl.inputPostProcessScript.value,
+    saveIn: tpl.inputSaveIn.value,
+    template: tpl.inputTemplate.value
+  }));
+
+  return tpl.divProps;
+}
+
+function updateIconPreview (tpl) {
+  if (tpl.inputIcon.value) {
+    tpl.divIconPreview.style.backgroundImage = `url("${tpl.inputIcon.value}")`;
+  } else {
+    tpl.divIconPreview.style.backgroundImage = null;
+  }
+}
+
+function updatePropsConfigValidation (tpl) {
+  const placeholder = 'Inherited from Default';
+  if (tpl.checkInheritDefault.checked) {    
+    tpl.divProps.classList.add('inherits-default');
+    tpl.inputCustomArgs.setAttribute('placeholder', placeholder);
+    tpl.inputFormat.removeAttribute('required');
+    tpl.inputFormat.setAttribute('placeholder', placeholder);
+    tpl.inputPostProcessScript.setAttribute('placeholder', placeholder);
+    tpl.inputTemplate.removeAttribute('required');
+    tpl.inputTemplate.setAttribute('placeholder', placeholder);
+    tpl.inputSaveIn.removeAttribute('required');
+    tpl.inputSaveIn.setAttribute('placeholder', placeholder);
+  } else {    
+    tpl.divProps.classList.remove('inherits-default');
+    tpl.inputCustomArgs.removeAttribute('placeholder');
+    tpl.inputFormat.removeAttribute('placeholder');
+    tpl.inputFormat.setAttribute('required', 'true');
+    tpl.inputPostProcessScript.removeAttribute('placeholder');
+    tpl.inputTemplate.removeAttribute('placeholder');
+    tpl.inputTemplate.setAttribute('required', 'true');
+    tpl.inputSaveIn.setAttribute('required', 'true');
+    tpl.inputSaveIn.removeAttribute('placeholder');
+  }
+}
 
 // Save the options to local storage.
 async function saveOptions (event) {
-  event.preventDefault();
-  event.stopPropagation();
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
   if (!el.optionsForm.checkValidity()) {
     return;
@@ -133,21 +211,73 @@ async function saveOptions (event) {
     el.inputSendCookiesYoutube.checked = false;
   }
 
+  let props = [].slice.call(el.divPropsList.children)
+    .filter(element => element.tagName === 'DIV')
+    .map(divProps => divToPropsMap.get(divProps)());
+
+  // Save all settings.
   await browser.storage.local.set({
-    addon: {
-      quickAudioFormat: el.inputQuickAudioFormat.value,
-      concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value),
-      switchSets: el.textareaSwitchSets.value,
-      sendCookiesYoutube: el.inputSendCookiesYoutube.checked
-    },
-    props: {
-      exePath: el.inputExePath.value,
-      saveIn: el.inputSaveIn.value,
-      template: el.inputTemplate.value,
-      format: el.inputFormat.value,
-      customArgs: el.inputCustomArgs.value
-    }
+    exePath: el.inputExePath.value,
+    concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value),
+    sendCookiesYoutube: el.inputSendCookiesYoutube.checked,
+    props
   });
 
   alert('Settings have been saved');
+}
+
+// Backup settings to a JSON file which is downloaded.
+async function backupSettings () {
+  // Get the settings to be backed up.
+  let backupSettings = await browser.storage.local.get({
+    exePath: null,
+    concurrentJobsLimit: 1,
+    sendCookiesYoutube: null,
+    props: []
+  });
+
+  // Wrap the settings in an envelope.
+  let backupData = {};
+  backupData.settings = backupSettings;
+  backupData.timestamp = new Date();
+  backupData.fileName = 'youtubeDlButton.' + [
+    String(backupData.timestamp.getFullYear()),
+    String(backupData.timestamp.getMonth() + 1).padStart(2, '0'),
+    String(backupData.timestamp.getDate()).padStart(2, '0')
+  ].join('-') + '.json';
+  // Record the current addon version.
+  let selfInfo = await browser.management.getSelf();
+  backupData.addonId = selfInfo.id;
+  backupData.version = selfInfo.version;
+
+  // Encode the backup as a JSON data URL.
+  let jsonData = JSON.stringify(backupData, null, 2);
+  let dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonData);
+
+  // Prompt the user to download the backup.
+  let a = window.document.createElement('a');
+  a.href = dataUrl;
+  a.download = backupData.fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Restore settings froma JSON file which is uploaded.
+async function restoreSettings () {
+  let reader = new window.FileReader();
+  reader.onload = async () => {
+    try {
+      // TODO Validate the backup version, etc.
+      let backupData = JSON.parse(reader.result);
+      populateSettings(backupData.settings);      
+      alert('Settings copied from backup; please Save now.');
+    } catch (error) {
+      alert(`Failed to restore: ${error}`);
+    }
+  };
+  reader.onerror = (error) => {
+    alert(`Failed to restore: ${error}`);
+  };
+  reader.readAsText(el.fileRestoreSettings.files[0]);
 }

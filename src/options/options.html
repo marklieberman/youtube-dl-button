@@ -10,41 +10,28 @@
           crossorigin="anonymous">
     <link rel="stylesheet"
           href="/common/bootstrap.css">
+    <link rel="stylesheet"
+          href="options.css">
   </head>
   <body>
     <form class="was-validated" id="options-form" novalidate>
       <div class="container">
         <h4>Youtube-DL Button Options</h4>
-
         <div class="row">
+
           <div class="col-md-12">
             <div class="form-row">
               <!-- exe path -->
-              <div class="form-group col-md-12">
-                <label for="exePath">Path to youtube-dl executable</label>
+              <div class="form-group col-md-9">
+                <label for="exePath">Path to youtube-dl/yt-dlp executable</label>
                 <input class="form-control" type="text" id="exe-path"
-                       required></input>
+                        required></input>
                 <small class="form-text text-muted">
-                  Provide the absolute path to youtube-dl.
+                  Provide the absolute path to youtube-dl/yt-dlp.
                 </small>
                 <small class="invalid-feedback">
                   This is required or the addon cannot function.
                 </small>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <!-- save path -->
-              <div class="form-group col-md-9">
-                <label for="save-in">Default download location</label>
-                <input class="form-control" type="text" id="save-in"
-                       required></input>
-                <small class="form-text text-muted">
-                  Provide the absolute path to a folder where downloads will be saved.
-                </small>
-                <div class="invalid-feedback">
-                  This field is required.
-                </div>
               </div>
 
               <!-- concurrent downloads -->
@@ -57,87 +44,40 @@
                 </small>
               </div>
             </div>
-
-            <h5>Switches</h5>            
-
-            <div class="form-row">
-              <!-- format -->
-              <div class="form-group col-md-6">
-                <label for="format">
-                  Default format
-                  <a class="text-muted"
-                    href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
-                    target="_blank"
-                    title="View youtube-dl documentation">
-                    <i class="fa fa-info-circle"></i>
-                  </a>
-                </label>
-                <input class="form-control" type="text" id="format"
-                      list="formats"></input>
-                <small class="form-text text-muted">
-                  The format to download when the <i class="fa fa-download"></i> button is pressed.
-                </small>
-                <datalist id="formats">
-                  <option value="bestvideo+bestaudio/best"></option>
-                  <option value="best"></option>
-                  <option value="bestvideo"></option>
-                  <option value="bestaudio"></option>
-                  <option value="worst"></option>
-                  <option value="worstvideo"></option>
-                  <option value="worstaudio"></option>
-                </datalist>
-              </div>
-
-              <!-- audio format -->
-              <div class="form-group col-md-6">
-                <label for="save-in">
-                  Quick download audio format
-                </label>
-                <input class="form-control" type="text" id="quick-audio-format"></input>
-                <small class="form-text text-muted">
-                  The format to download when the <i class="fa fa-music"></i> button is pressed.
-                </small>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <!-- template -->
-              <div class="form-group col-md-12">
-                <label for="template">
-                  Default naming template
-                  <a class="text-muted"
-                     href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
-                     target="_blank"
-                     title="View youtube-dl documentation">
-                    <i class="fa fa-info-circle"></i>
-                  </a>
-                </label>
-                <input class="form-control" type="text" id="template"></input>
-                <small class="form-text text-muted">
-                  Template to apply when naming downloaded files.
-                </small>
-              </div>
-            </div>
             
+            <!-- props list -->
             <div class="form-row">
-              <!-- custom arguments -->
               <div class="form-group col-md-12">
-                <label for="template">
-                  Custom youtube-dl arguments
-                </label>
-                <input class="form-control" type="text" id="custom-args"></input>
-                <small class="form-text text-muted">
-                  Additional arguments to pass to youtube-dl.
-                </small>
+                <hr>
+                <h5>Parameter Sets</h5>
+                <p>
+                  Easily invoke youtube-dl/yt-dlp using different combinations of settings and switches. The addon 
+                  provides two built-in profiles for the Default Download <i class="fas fa-download"></i> and Audio 
+                  Download <i class="fas fa-music"></i> buttons in the popup. You may also add custom parameter sets
+                  while will appear in the popup.
+                </p>
+              </div>
+            </div>
+            <div id="props-list"></div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <button class="btn btn-secondary" type="button" id="add-props">
+                  Add Parameter Set
+                </button>
               </div>
             </div>
 
-            <h5>Cookies</h5>
-            <div class="alert alert-warning">
-              This add-on requires additional permissions to read cookies. You will be prompted to grant these 
-              permissions when you save settings.
+            <!-- browser integration -->
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <hr>
+                <h5>Browser Integrations</h5>
+                <div class="alert alert-warning">
+                  This add-on requires additional permissions to read cookies. If you enable any cookie integrations,
+                  you will be prompted to grant these permissions when you save the settings.
+                </div>
+              </div>
             </div>
-
             <div class="form-row">
               <!-- cookies: youtube -->
               <div class="form-group col-md-12">
@@ -152,29 +92,178 @@
             </div>
 
             <hr>
-            <h5>Quick Configure</h5>       
-            
+
             <div class="form-row">
-              <!-- quick configure -->
-              <div class="form-group col-md-12">
-                <textarea class="form-control" id="switch-sets" rows="6"></textarea>              
-                <small class="form-text text-muted">
-                  Use the dropdown menu in the popup to quickly apply settings defined here.
-                </small>
+              <!-- save button-->
+              <div class="form-group col-md-3">                
+                <button class="btn btn-primary" type="submit">
+                  Save
+                </button>
+              </div>
+              <!-- backup and restore buttons -->
+              <div class="form-group col-md-9 text-right">                
+                <button id="backup-settings" class="btn btn-secondary" type="button">
+                  Backup Settings
+                </button>
+                <label class="btn btn-secondary btn-file restore-settings">
+                  Restore Settings
+                  <input id="restore-settings" type="file" accepts="*.json"></input>
+                </label>
               </div>
             </div>
-          </div><!-- /col -->
-        </div><!-- /row -->
+          </div>
+        </div>
+        
+        <!-- props template -->
+        <template id="props-template">
+          <div class="container">
+            <div class="row">
+                <div class="form-group col-md-10">
+                  <div class="form-check">
+                    <label class="form-check-label show-audio-props show-custom-props">
+                      <input class="form-check-input" type="checkbox" name="inherit-default">
+                      Inherit from Default parameter set.
+                    </label>
+                  </div>
+                </div>
 
-        <div class="row">
-          <div class="col-md-12">
-            <div class="form-group">
-              <button class="btn btn-primary" type="submit">
-                Save
-              </button>
+                <!-- actions -->
+                <div class="form-group col-md-2 text-right">
+                  <button class="btn btn-sm btn-secondary delete" type="button" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>                
+                </div>
+              
             </div>
-          </div><!-- /col -->
-        </div><!-- /row -->
+            <div class="row">
+              <div class="col-md-2">
+                <!-- parameter set name -->
+                <div class="form-group">
+                  <label for="name">Name</label>
+                  <input class="form-control" type="text" name="name"
+                        required></input>
+                  <small class="form-text text-muted show-default-props">
+                    The <i class="fas fa-download"></i> button uses this parameter set.
+                  </small>
+                  <small class="form-text text-muted show-audio-props">
+                    The <i class="fas fa-music"></i> button uses this parameter set.
+                  </small>
+                  <small class="form-text text-muted show-custom-props">
+                    This name identifies the parameter set.
+                  </small>
+                  <div class="invalid-feedback">
+                    This field is required.
+                  </div>
+                </div>
+
+                <!-- inherits default -->
+                <div class="form-group show-custom-props">
+                  <label for="icon">
+                    Icon URL
+                    
+                  </label>
+                  <input class="form-control no-validate" type="text" name="icon"></input>
+                  <small class="form-text text-muted">
+                    The <div class="icon-preview"></div> button uses this parameter set. (A 
+                    <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs">data URL</a>
+                    is recommended)
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-10">
+                <!-- save path -->
+                <div class="form-group">
+                  <label for="save-in">Download location</label>
+                  <input class="form-control" type="text" name="save-in"></input>
+                  <small class="form-text text-muted">
+                    Provide the absolute path to a folder where downloads will be saved.
+                  </small>
+                  <div class="invalid-feedback">
+                    This field is required.
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <!-- format -->
+                  <div class="form-group col-md-6">
+                    <label for="format">
+                      Format
+                      <a class="text-muted"
+                        href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
+                        target="_blank"
+                        title="View youtube-dl documentation">
+                        <i class="fa fa-info-circle"></i>
+                      </a>
+                    </label>
+                    <input class="form-control" type="text" name="format"
+                          list="formats"></input>
+                    <small class="form-text text-muted show-default-props">
+                      The format to download when the <i class="fa fa-download"></i> button is pressed.
+                    </small>
+                    <small class="form-text text-muted show-audio-props">
+                      The format to download when the <i class="fa fa-music"></i> button is pressed.
+                    </small>
+                    <small class="form-text text-muted show-custom-props">
+                      The format to download when the download button is pressed.
+                    </small>
+                    <datalist id="formats">
+                      <option value="bestvideo+bestaudio/best"></option>
+                      <option value="best"></option>
+                      <option value="bestvideo"></option>
+                      <option value="bestaudio"></option>
+                      <option value="worst"></option>
+                      <option value="worstvideo"></option>
+                      <option value="worstaudio"></option>
+                    </datalist>
+                  </div>
+
+                  <!-- template -->
+                  <div class="form-group col-md-6">
+                    <label for="template">
+                      Template
+                      <a class="text-muted"
+                        href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
+                        target="_blank"
+                        title="View youtube-dl documentation">
+                        <i class="fa fa-info-circle"></i>
+                      </a>
+                    </label>
+                    <input class="form-control" type="text" name="template"></input>
+                    <small class="form-text text-muted">
+                      Template to apply when naming downloaded files.
+                    </small>
+                  </div>
+
+                </div>
+                <div class="form-row">
+
+                  <!-- custom arguments -->
+                  <div class="form-group col-md-6">
+                    <label for="custom-args">
+                      Custom youtube-dl/yt-dlp arguments
+                    </label>
+                    <input class="form-control no-validate" type="text" name="custom-args"></input>
+                    <small class="form-text text-muted">
+                      Additional arguments to pass to youtube-dl/yt-dlp on the commandline.
+                    </small>
+                  </div>
+
+                  <!-- post processing script -->
+                  <div class="form-group col-md-6">
+                    <label for="post-process-script">
+                      Post processing script
+                    </label>
+                    <input class="form-control no-validate" type="text" name="post-process-script"></input>
+                    <small class="form-text text-muted">
+                      Invoke a script after youtube-dl/yt-dlp is finished running.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </form>
 

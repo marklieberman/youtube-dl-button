@@ -1,0 +1,71 @@
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/variables";
+
+.form-control.no-validate:valid {
+    border-color: $input-border-color;
+    padding: $input-padding-x;
+    background: $input-bg;
+}
+
+#options-form {
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+    .restore-settings {
+        margin-bottom: 0;
+
+        input {
+            display: none;
+        }
+    }
+}
+
+#props-list {
+    & > div {
+        padding: 1rem;
+        border: 1px solid $list-group-border-color;
+        border-radius: $border-radius;
+        margin-bottom: $form-group-margin-bottom;
+    }
+
+    .icon-preview {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3C!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --%3E%3Cpath d='M374.6 310.6l-160 160C208.4 476.9 200.2 480 192 480s-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L160 370.8V64c0-17.69 14.33-31.1 31.1-31.1S224 46.31 224 64v306.8l105.4-105.4c12.5-12.5 32.75-12.5 45.25 0S387.1 298.1 374.6 310.6z'/%3E%3C/svg%3E");
+    }
+
+    label[for="icon"] {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        width: 100%;
+    }
+
+    .show-default-props,
+    .show-audio-props,
+    .show-custom-props,
+    .show-inherits-default {
+        display: none;
+    }
+
+    .default-props .show-default-props {
+        display: block;
+    }
+
+    .audio-props .show-audio-props {
+        display: block;
+    }
+
+    .custom-props .show-custom-props {
+        display: block;
+    }
+
+    .inherits-default .show-inherits-default {
+        display: block;
+    }
+
+}
