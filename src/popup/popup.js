@@ -2,13 +2,15 @@
 
 const el = {
   inputVideoUrl: document.getElementById('video-url'),
-  buttonCreateJob: document.getElementById('create-job'),
-  buttonCreateJobAudio: document.getElementById('create-job-audio'),
+  //buttonCreateJob: document.getElementById('create-job'),
+  //buttonCreateJobAudio: document.getElementById('create-job-audio'),
   buttonMainDowpdown: document.getElementById('toggle-main-dropdown'),
+  divGrabVideoBar: document.getElementById('grab-video-bar'),
   divMainDropdown: document.getElementById('main-dropdown'),
-  divSwitchSetsList: document.getElementById('switch-sets-list'),
-  divQuickJobButtons: document.getElementById('quick-job-buttons'),
-  templateQuickJob: document.getElementById('quick-job-template'),
+  divDropdownAddon: document.getElementById('dropdown-addon'),
+  //divSwitchSetsList: document.getElementById('switch-sets-list'),
+  divPropsButtonList: document.getElementById('props-button-list'),
+  templatePropsButton: document.getElementById('props-button-template'),
   settingsPanel: document.getElementById('settings-panel'),
   settingsTabs: {
     saving: {
@@ -35,20 +37,12 @@ const el = {
 
 // Add-on settings.
 const settings = {
-  addon: {
-    quickAudioFormat: 'bestaudio',
-    switchSets: '[]'
-  },
-  props: {
-    exePath: '',
-    saveIn: '',
-    template: '',
-    format: ''
-  },
+  exePath: null,
   popup: {
     showSettings: true,
     settingsTab: 'saving'
-  }
+  },
+  props: []
 };
 
 /**
@@ -92,17 +86,17 @@ promises.push(browser.tabs.executeScript({
 // Get the saved settings from local storage.
 promises.push(browser.storage.local.get(settings).then(results => {
   // Copy settings into settings object.
-  [ 'addon', 'props', 'popup' ].forEach(group => {
-    Object.keys(settings[group]).forEach(key => {
-      if (typeof results[group][key] !== 'undefined') {
-        settings[group][key] = results[group][key];
-      }
-    });
-  });
+  Object.assign(settings, results);
 
-  el.inputSaveIn.placeholder = 'Default: ' + settings.props.saveIn;
-  el.inputTemplate.placeholder = 'Default: ' + settings.props.template;
-  el.inputFormat.placeholder = 'Default: ' + settings.props.format;
+  let unconfiguredProps = {
+    saveIn: 'Not Configured',
+    template: 'Not Configured',
+    format: 'Not Configured'
+  };
+  let defaultProps = settings.props.length ? settings.props[0] : unconfiguredProps;
+  el.inputSaveIn.placeholder = `Default: ${defaultProps.saveIn || unconfiguredProps.saveIn}`;
+  el.inputTemplate.placeholder = `Default: ${defaultProps.template || unconfiguredProps.template}`;
+  el.inputFormat.placeholder = `Default: ${defaultProps.format || unconfiguredProps.format}`;
 
   return settings;
 }));
@@ -125,8 +119,8 @@ Promise.all(promises)
     // Initialize the state of the interface.
     openSettingsTab(settings.popup.settingsTab);
     
-    // Initialize the remain interface elements.
-    populateSwitchSetEntries();
+    // Initialize the remaining interface elements.
+    populatePropsEntries();
 
     // Update the job list and start polling.
     validateCreateJob();
@@ -155,12 +149,6 @@ el.inputFormat.addEventListener('change', () => {
 });
 
 // Click
-el.buttonCreateJob.addEventListener('click', () => {
-  createJob();
-});
-el.buttonCreateJobAudio.addEventListener('click', () => {
-  createJob(true);
-});
 el.buttonMainDowpdown.addEventListener('click', () => {
   toggleMainDropdown();
 });
@@ -263,78 +251,49 @@ function toggleMainDropdown () {
 /**
  * Populate the list of 'switch sets' that quickly configure the popup.
  */
-function populateSwitchSetEntries () {
-  let switchSetList = el.divSwitchSetsList,
-    profiles;
-  
-  // Add a 'default' switch set that just clears all inputs.
-  addSwitchSetEntry({ name: 'Default' });
-
-  try {
-    profiles = JSON.parse(settings.addon.switchSets || '[]');
-  } catch (error) {
-    console.log('invalid JSON in switch sets', settings.addon.switchSets);
-  }
-
+function populatePropsEntries () {
   // Append an entry for each switch set from settings.
-  profiles.forEach(profile => {
-    addSwitchSetEntry(profile);
-    if (profile.showButton) {
-      addQuickJobButton(profile);
-    }
+  settings.props.forEach((props, index) => {
+    addPropsButton(props, index);
   });
 
-  function addSwitchSetEntry (profile) {
-    // Add an item to the switch sets dropdown.
-    let item = document.createElement('a');
-    item.href = '#';
-    item.innerText = profile.name;
-    item.addEventListener('click', () => {
-      loadSwitchProfile(profile);
-      toggleMainDropdown();
-    });
-    switchSetList.appendChild(item);
-  }
+  // Add a button to create a job using the parameter set.
+  function addPropsButton (props, index) {
+    let template = document.importNode(el.templatePropsButton.content, true);
+    let tpl = {
+      button: template.querySelector('button')
+    };
 
-  function addQuickJobButton (profile) {
-    // Make the quick download buttons visible.
-    el.divQuickJobButtons.setAttribute('style', '');
-
-    // Add an item to the quick download buttons.
-    let template = document.importNode(el.templateQuickJob.content, true);
-    let button = template.firstElementChild;
-    button.setAttribute('title', `Quick download: ${profile.name}`);
-    button.addEventListener('click', () => {
-      loadSwitchProfile(profile);
-      createJob(false);
-    });
-
-    // Add an image icon or font icon.
-    if (profile.iconUrl) {
-      let img = document.createElement('img');
-      img.src = profile.iconUrl;
-      img.setAttribute('style', `
-        max-width: 16px; 
-        height: auto; 
-        object-fit: contain; 
-        ${profile.iconStyle || ''}`);
-      button.appendChild(img);
+    if (index === 0) {
+      // Default download button
+      tpl.button.classList.add('btn-dark');
+      tpl.button.firstElementChild.classList.add('fa-download');
+    } else
+    if (index === 1) {
+      // Audio download button
+      tpl.button.classList.add('btn-secondary');
+      tpl.button.firstElementChild.classList.add('fa-music');
     } else {
-      let i = document.createElement('i');
-      i.setAttribute('class', profile.iconClass || 'fa fa-arrow-circle-down');
-      if (profile.iconStyle) {
-        i.setAttribute('style', profile.iconStyle);
+      // Custom props download button
+      tpl.button.classList.add('btn-secondary', 'custom-props-button');
+      tpl.button.removeChild(tpl.button.firstElementChild);
+      if (props.icon) {
+        tpl.button.style.backgroundImage = `url("${props.icon}")`;
       }
-      button.appendChild(i);
     }
 
-    el.divQuickJobButtons.appendChild(template);
-  }
+    tpl.button.addEventListener('click', () => {
+      createJob(props);
+    });
+    tpl.button.addEventListener('mousedown', event => {
+      if (event.button === 1) {
+        el.inputSaveIn.value = props.saveIn;
+        el.inputFormat.value = props.format;
+        el.inputTemplate.value = props.template;
+      }
+    });
 
-  function loadSwitchProfile (profile) {
-    el.inputSaveIn.value = profile.saveIn || '';
-    el.inputTemplate.value = profile.template || '';
-    el.inputFormat.value = profile.format || '';
+    el.divGrabVideoBar.insertBefore(template, el.divDropdownAddon);
   }
 }
 
@@ -376,36 +335,47 @@ function validateCreateJob () {
     disabled = true;
   }
 
-  el.buttonCreateJob.disabled = disabled;
-  el.buttonCreateJobAudio.disabled = disabled;
+  document.querySelectorAll('.props-button').forEach(node => node.disabled = disabled);
 }
 
 /**
  * Create a job.
  */
-function createJob (bestaudio) {
+function createJob (props) {
   // Ensure that required settings have been configured.
-  if (!settings.props.exePath || !settings.props.saveIn) {
+  if (!settings.exePath) {
     window.alert('You must finish configuring the addon.');
     browser.runtime.openOptionsPage().then(() => window.close());
     return;
   }
 
-  // Use the addon quick audio format for audio jobs.
-  let format = el.inputFormat.value || settings.props.format;
-  if (bestaudio) {
-    format = settings.addon.quickAudioFormat;
-  }
+  let jobProps = {
+    videoUrl: el.inputVideoUrl.value
+  };
 
+  // Set fallback parameters to either inherited or null depending on config.
+  let defaultProps = props.inheritDefault ? settings.props[0] : {
+    saveIn: null,
+    template: null,
+    format: null
+  };
+
+  // Assign job props in form > parameter set > fallback parameters priority.
+  jobProps.saveIn = el.inputSaveIn.value || props.saveIn || defaultProps.saveIn;
+  jobProps.template = el.inputTemplate.value|| props.template || defaultProps.template;
+  jobProps.format = el.inputFormat.value || props.format || defaultProps.format;
+
+  // Complain if any of the required parameters are empty.
+  if (!jobProps.saveIn || !jobProps.template || !jobProps.format) {
+    window.alert('You must finish configuring the addon.');
+    browser.runtime.openOptionsPage().then(() => window.close());
+    return;
+  }
+  
   browser.runtime.sendMessage({
     topic: 'ydb-create-job',
     data: {
-      props: {
-        videoUrl: el.inputVideoUrl.value,
-        saveIn: el.inputSaveIn.value || settings.props.saveIn,
-        template: el.inputTemplate.value || settings.props.template,
-        format
-      }
+      props: jobProps
     }
   });
 }

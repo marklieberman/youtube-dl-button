@@ -6,10 +6,32 @@
 (function () {
 
   const initialSettings = {
-    defaultFormat: 'bv+ba/best',
-    defaultTemplate: '%(title)s-%(id)s.%(ext)s',
-    audioFormat: 'ba'
+    concurrentJobsLimit: 1,
+    sendCookiesYoutube: false,
+    props: [{
+      name: 'Default',
+      icon: null,
+      saveIn: '',
+      format: 'bv+ba/best',
+      template: '%(title)s-%(id)s.%(ext)s',
+      customArgs: '',
+      inheritDefault: false
+    },{
+      name: 'Audio',
+      icon: null,
+      format: 'ba',
+      inheritDefault: true
+    }]
   };
+
+  async function resetToDefaults () {
+    return await browser.storage.local.set({
+      exePath: '',
+      concurrentJobsLimit: initialSettings.concurrentJobsLimit,
+      sendCookiesYoutube: initialSettings.sendCookiesYoutube,
+      props: initialSettings.props
+    });
+  }
 
   if (browser.runtime.onInstalled) {
     browser.runtime.onInstalled.addListener(details => {
@@ -27,25 +49,7 @@
   // Initialize the addon when first installed.
   function onInstalled (details) {
     console.log('youtube-dl button installed', details);
-    return browser.storage.local.set({
-      exePath: '',
-      concurrentJobsLimit: 1,
-      sendCookiesYoutube: false,
-      props: [{
-        name: 'Default',
-        icon: null,
-        saveIn: '',
-        format: initialSettings.defaultFormat,
-        template: initialSettings.defaultTemplate,
-        customArgs: '',
-        inheritDefault: false
-      },{
-        name: 'Audio',
-        icon: null,
-        format: initialSettings.audioFormat,
-        inheritDefault: true
-      }]
-    });
+    resetToDefaults();    
   }
 
   // Update the settings when the addon is updated.
@@ -53,7 +57,6 @@
     let versionParts = details.previousVersion
       .split('.')
       .map(n => Number(n));
-
     console.log('youtube-dl button updated', details, versionParts);
     
     // Upgrade from 1.1.2 or lower.
@@ -62,7 +65,7 @@
         addon: null,
         props: null
       }).then(results => {
-        let quickAudioFormat = initialSettings.audioFormat,
+        let quickAudioFormat = initialSettings.props[1].format,
             switchSets = [];
         if (results.addon) {
           quickAudioFormat = results.addon.quickAudioFormat || quickAudioFormat;
@@ -76,15 +79,20 @@
               icon: switchSet.iconUrl || null
             }));
           }
+        } else {
+          results.exePath = '';
+          results.concurrentJobsLimit = initialSettings.concurrentJobsLimitl;
+          results.sendCookiesYoutube = initialSettings.sendCookiesYoutube;
         }
+
         if (results.props && !Array.isArray(results.props)) {
           results.exePath = results.props.exePath || '';
           results.props = [{
             name: 'Default',
             icon: null,
             saveIn: results.props.saveIn || '',
-            format: results.props.format || initialSettings.defaultFormat,
-            template: results.props.template || initialSettings.defaultTemplate,
+            format: results.props.format || initialSettings.props[0].format,
+            template: results.props.template || initialSettings.props[0].template,
             customArgs: results.props.customArgs || '',
             inheritDefault: false
           },{
@@ -93,10 +101,13 @@
             format: quickAudioFormat,
             inheritDefault: true
           }].concat(switchSets);          
+        } else {
+          results.props = initialSettings.props;
         }
 
         // Upgrade settings.
         console.log('new settings are', results);
+
         return browser.storage.local.set(results)
           .then(() => browser.storage.local.remove('addon'));
       });

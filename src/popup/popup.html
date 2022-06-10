@@ -15,38 +15,19 @@
 
     <!-- grab video -->
     <div class="form-group grab-video">
-      <div class="input-group input-group-sm">
+      <div class="input-group input-group-sm" id="grab-video-bar">
         <div class="input-group-prepend">
           <span class="input-group-text">
             Grab from URL
           </span>
         </div>
         <input class="form-control" type="text" id="video-url"></input>
-        <div class="input-group-append">
-          <!-- begin download button -->
-          <button class="btn btn-dark" id="create-job"
-                  title="Send URL to youtube-dl">
-            <i class="fa fa-download"></i>
-          </button>
-        </div>
-        <div class="input-group-append">
-          <!-- begin download button -->
-          <button class="btn btn-secondary" id="create-job-audio"
-                  title="Quick download audio format">
-            <i class="fa fa-music"></i>
-          </button>
-        </div>
-        <div class="input-group-append">
+        <div class="input-group-append" id="dropdown-addon">
           <!-- dropdown button -->
           <div id="main-dropdown" style="display: none">
             <a id="open-addon-options" href="/options/options.html" target="_blank">
               Open add-on options
             </a>
-            <div class="group-heading">
-              Quick Configure
-            </div>
-            <!-- quick configure -->
-            <div id="switch-sets-list"></div>
           </div>
           <button class="btn btn-outline-secondary active" id="toggle-main-dropdown"
                   title="Popup options">
@@ -54,12 +35,12 @@
           </button>
         </div>
       </div>
-
-      <!-- quick download -->
-      <div class="btn-group btn-group-sm" id="quick-job-buttons"
-           style="display: none"></div>
-      <template id="quick-job-template">
-        <button class="btn btn-secondary"></button>
+      <template id="props-button-template">
+        <div class="input-group-append">
+          <button class="btn props-button">
+            <i class="fa"></i>
+          </button>
+        </div>
       </template>
     </div>
 
