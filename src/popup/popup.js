@@ -357,13 +357,17 @@ function createJob (props) {
   let defaultProps = props.inheritDefault ? settings.props[0] : {
     saveIn: null,
     template: null,
-    format: null
+    format: null,
+    customArgs: null,
+    postProcessScript: null
   };
 
   // Assign job props in form > parameter set > fallback parameters priority.
   jobProps.saveIn = el.inputSaveIn.value || props.saveIn || defaultProps.saveIn;
   jobProps.template = el.inputTemplate.value|| props.template || defaultProps.template;
   jobProps.format = el.inputFormat.value || props.format || defaultProps.format;
+  jobProps.customArgs = props.customArgs || defaultProps.customArgs;
+  jobProps.postProcessScript = props.postProcessScript || defaultProps.postProcessScript;
 
   // Complain if any of the required parameters are empty.
   if (!jobProps.saveIn || !jobProps.template || !jobProps.format) {

@@ -7,19 +7,14 @@ const state = {
 };
 
 const settings = {
-  addon: {
-    concurrentJobsLimit: 1,
-    sendCookiesYoutube: false
-  }
+  exePath: null,
+  concurrentJobsLimit: 1,
+  sendCookiesYoutube: false
 };
 
 // Get initial settings values.
 browser.storage.local.get(settings).then(results => {
-  Object.keys(settings.addon).forEach(key => {
-    if (typeof results.addon[key] !== 'undefined') {
-      settings.addon[key] = results.addon[key];
-    }
-  });
+  Object.assign(settings, results);
 });
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -29,12 +24,13 @@ browser.storage.local.get(settings).then(results => {
  * Invoked when settings are changed.
  */
 browser.storage.onChanged.addListener((changes, area) => {
-  if ((area === 'local') && changes.addon) {
-    Object.keys(settings.addon).forEach(key => {
-      if (typeof changes.addon.newValue[key] !== 'undefined') {
-        settings.addon[key] = changes.addon.newValue[key];
+  let keys = Object.keys(settings);
+  if (area === 'local') {
+    Object.keys(changes).forEach(changeKey => {
+      if (keys.includes(changeKey)) {
+        settings[changeKey] = changes[changeKey].newValue;
       }
-    });
+    })
   }
 });
 
@@ -109,6 +105,8 @@ class Job {
     this.cancelRequested = false;
     this.state = 'waiting';
     this.output = [];
+
+    this.props.exePath = settings.exePath;
   }
 
   /**
@@ -286,12 +284,12 @@ function onGetJobs (message) {
 /**
  * Create a new job.
  */
-function onCreateJob (message) {
+function onCreateJob (message) {  
   let job = new Job(message.data.props);
   state.jobs.unshift(job);
 
   // Start the job if below the concurrent jobs limit.
-  if (countActiveJobs() < settings.addon.concurrentJobsLimit) {
+  if (countActiveJobs() < settings.concurrentJobsLimit) {
     job.create();
   }
 
@@ -321,7 +319,7 @@ function onRetryJob (message) {
       job.setState('waiting');
 
       // Start the job if below the concurrent jobs limit.
-      if (countActiveJobs() < settings.addon.concurrentJobsLimit) {
+      if (countActiveJobs() < settings.concurrentJobsLimit) {
         job.create();
       }
     }
@@ -397,7 +395,7 @@ function onJobEnded (message) {
 
   // Start a job if below the concurrent jobs limit.
   let activeJobCount = countActiveJobs();
-  if (activeJobCount < settings.addon.concurrentJobsLimit) {
+  if (activeJobCount < settings.concurrentJobsLimit) {
     job = findNextWaitingJob();
     if (job) {
       job.create();
@@ -425,7 +423,7 @@ function getCookieJarForVideo (videoUrl) {
     let url = new URL(videoUrl);
     // Cookies for YouTube.
     if (url.host.endsWith('youtube.com')) {
-      if (settings.addon.sendCookiesYoutube) {
+      if (settings.sendCookiesYoutube) {
         return browser.cookies.getAll({
           domain: 'youtube.com'
         }).then(cookies => {
