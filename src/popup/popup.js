@@ -2,6 +2,9 @@
 
 const el = {
   inputVideoUrl: document.getElementById('video-url'),
+  inputMetadataUrl: document.getElementById('metadata-url'),
+  inputMetadataAuthor: document.getElementById('metadata-author'),
+  inputMetadataTitle: document.getElementById('metadata-title'),
   //buttonCreateJob: document.getElementById('create-job'),
   //buttonCreateJobAudio: document.getElementById('create-job-audio'),
   buttonMainDowpdown: document.getElementById('toggle-main-dropdown'),
@@ -64,9 +67,15 @@ class PerDomainSettings {
 // Get the URL of the active tab.
 let promises = [];
 promises.push(browser.tabs.executeScript({
-  code: 'window.location.href'
-}).then(urls => {
-  let url = new URL(urls[0]);
+  file: '/content/scrape.js'
+}).then(data => {
+  let url = new URL(data[0].url),
+      metadata = data[0].metadata;
+
+  // Store metadata if any is available.
+  el.inputMetadataUrl.value = url;
+  el.inputMetadataAuthor.value = metadata.author || null;
+  el.inputMetadataTitle.value = metadata.title || null;
 
   // Also get the per-domain settings for this host.
   return browser.storage.local.get({
@@ -350,8 +359,18 @@ function createJob (props) {
   }
 
   let jobProps = {
-    videoUrl: el.inputVideoUrl.value
+    videoUrl: el.inputVideoUrl.value.trim(),
+    metadata: {
+      author: null,
+      title: null
+    }
   };
+
+  // Only send metadata if the video URL still matches the scraped URL.
+  if (el.inputMetadataUrl.value == jobProps.videoUrl) {
+    jobProps.metadata.author = (el.inputMetadataAuthor.value || null);
+    jobProps.metadata.title = (el.inputMetadataTitle.value || null);
+  }
 
   // Set fallback parameters to either inherited or null depending on config.
   let defaultProps = props.inheritDefault ? settings.props[0] : {
