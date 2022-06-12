@@ -14,7 +14,9 @@ if (data.url.includes('youtube.com/watch')) {
             data.metadata.title = player.config.args.title;
             data.metadata.author = player.config.args.author;
         }
-    } catch (error) {}
+    } catch (error) {
+        // empty
+    }
 }
 
 data;

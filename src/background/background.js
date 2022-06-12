@@ -30,7 +30,7 @@ browser.storage.onChanged.addListener((changes, area) => {
       if (keys.includes(changeKey)) {
         settings[changeKey] = changes[changeKey].newValue;
       }
-    })
+    });
   }
 });
 

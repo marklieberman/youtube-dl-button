@@ -71,4 +71,26 @@
         display: block;
     }
 
+    & > div:nth-child(1),
+    & > div:nth-child(2) {    
+        .move-up {
+            display: none;
+        }
+        .move-down {
+            display: none;
+        }
+    }
+
+    & > div:nth-child(3) {
+        .move-up {
+            display: none;
+        }
+    }
+
+    & > div:last-child {
+        .move-down {
+            display: none;
+        }
+    }
+
 }

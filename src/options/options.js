@@ -96,7 +96,9 @@ function createPropsConfig (props, index = -1) {
   let template = document.importNode(el.templateProps.content, true);
   let tpl = {
     divProps: template.firstElementChild,    
-    buttonDelete: template.querySelector('button.delete'),    
+    buttonDelete: template.querySelector('button.delete'), 
+    buttonMoveDown: template.querySelector('button.move-down'),   
+    buttonMoveUp: template.querySelector('button.move-up'),
     checkInheritDefault: template.querySelector('[name="inherit-default"]'),
     divIconPreview: template.querySelector('.icon-preview'),
     inputCustomArgs: template.querySelector('[name="custom-args"]'),
@@ -137,6 +139,14 @@ function createPropsConfig (props, index = -1) {
   updatePropsConfigValidation(tpl);
 
   // Bind event handlers to the form.
+  tpl.buttonMoveUp.addEventListener('click', () => {
+    let sibling = tpl.divProps.previousElementSibling;
+    tpl.divProps.parentNode.insertBefore(tpl.divProps, sibling);
+  });
+  tpl.buttonMoveDown.addEventListener('click', () => {
+    let sibling = tpl.divProps.nextElementSibling;
+    sibling.parentNode.insertBefore(sibling, tpl.divProps);
+  });
   tpl.buttonDelete.addEventListener('click', () => tpl.divProps.parentNode.removeChild(tpl.divProps));
   tpl.inputIcon.addEventListener('change', () => updateIconPreview(tpl));
   tpl.checkInheritDefault.addEventListener('change', () => updatePropsConfigValidation(tpl));  
