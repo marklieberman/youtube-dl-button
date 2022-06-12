@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -149,17 +150,15 @@ namespace YoutubeDlButton
         /// <param name="message"></param>
         static void OnCancelJob(Message<CancelJob> message)
         {
-            // youtube-dl does not document any exist codes besides 0 and 1.
-            // To avoid leaving orphaned jobs in the frontend, we will report the following extra codes:
-            //   255: The job was not found.
-            //   254: The job was found and cancelled.
-            var exitCode = 255;
+            // youtube-dl does not document any exit codes besides 0 and 1.
+            // To avoid leaving orphaned jobs in the frontend, we will report additional codes.
+            var exitCode = (int)YoutubeDlRunner.ExitCodes.JobNotFound;
 
             jobs.TryGetValue(message.Data.JobId, out YoutubeDlRunner runner);
             if (runner != null)
             {
                 // Found the job.
-                exitCode = 254;
+                exitCode = (int)YoutubeDlRunner.ExitCodes.JobCancelled;
                 runner.Cancel();
                 runner.Dispose();
                 jobs.TryRemove(runner.JobId, out _);

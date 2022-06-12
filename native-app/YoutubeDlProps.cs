@@ -34,6 +34,9 @@ namespace YoutubeDlButton
         [JsonProperty("restrictFilenames")]
         public bool RestrictFilenames { get; set; } = false;
 
+        [JsonProperty("postProcessScript")]
+        public string PostProcessScript { get; set; }
+
         private string cookieJarPath;
 
         /// <summary>
