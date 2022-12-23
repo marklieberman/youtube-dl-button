@@ -380,6 +380,11 @@ function onJobOutput (message) {
       job.destination = match[1];
       return;
     }
+    match = /^File name is: (.+)$/.exec(message.data.output);
+    if (match) {
+      job.destination = match[1];
+      return;
+    }
   }
 }
 
