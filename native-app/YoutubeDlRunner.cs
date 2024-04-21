@@ -73,11 +73,16 @@ namespace YoutubeDlButton
                 // Create a cookie jar if cookies are provided.
                 Props.CreateCookieJar();
 
+                // Report the command line.
+                var exePath = Environment.ExpandEnvironmentVariables(Props.ExePath);
+                var arguments = Props.ToArguments();
+                Output?.Invoke(this, "Command line: " + exePath + " " + arguments);
+
                 // Start an instance of youtube-dl.
                 youtubeDlProcess = Process.Start(new ProcessStartInfo
                 {
-                    FileName = Environment.ExpandEnvironmentVariables(Props.ExePath),
-                    Arguments = Props.ToArguments(),
+                    FileName = exePath,
+                    Arguments = arguments,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -101,11 +106,6 @@ namespace YoutubeDlButton
                 // Send the error message back to the addon.
                 Output?.Invoke(this, string.Format("Error starting youtube-dl process: {0}", e.Message));
                 Ended?.Invoke(this, (int)ExitCodes.Error);
-            }
-            finally
-            {
-                // Delete the cookie jar when finished.
-                Props.RemoveCookieJar();
             }
         }
         
@@ -152,6 +152,9 @@ namespace YoutubeDlButton
                 // Send the error message back to the addon.
                 Output?.Invoke(this, string.Format("Error starting post process: {0}", e.Message));
                 Ended?.Invoke(this, (int)ExitCodes.Error);
+
+                // Delete the cookie jar on error.
+                Props.RemoveCookieJar();
             }            
         }
 
@@ -186,17 +189,25 @@ namespace YoutubeDlButton
         /// </summary>
         private void OnYoutubeDlProcessExited(object sender, EventArgs e)
         {
-            // Begin post-processing if youtube-dl exited cleanly.
-            if (((youtubeDlProcess?.ExitCode ?? 1) == 0) && !String.IsNullOrEmpty(Props.PostProcessScript))
+            try
             {
-                PostProcess();
+                // Begin post-processing if youtube-dl exited cleanly.
+                if (((youtubeDlProcess?.ExitCode ?? 1) == 0) && !String.IsNullOrEmpty(Props.PostProcessScript))
+                {
+                    PostProcess();
+                }
+                else
+                {
+                    // Invoke the ended callback when the process exits.
+                    var exitCode = ((youtubeDlProcess?.ExitCode ?? 1) == 0) ? 0 : (int)ExitCodes.Error;
+                    Ended?.Invoke(this, exitCode);
+                }
+            } 
+            finally 
+            {
+                // Delete the cookie jar on exit.
+                Props.RemoveCookieJar();
             }
-            else
-            {
-                // Invoke the ended callback when the process exits.
-                var exitCode = ((youtubeDlProcess?.ExitCode ?? 1) == 0) ? 0 : (int)ExitCodes.Error;
-                Ended?.Invoke(this, exitCode);
-            }            
         }
 
         /// <summary>
