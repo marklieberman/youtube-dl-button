@@ -192,8 +192,7 @@ async function applyCookiePermissions (requested) {
   let permitted = (await browser.permissions.getAll()).origins;  
   let relinquished = permitted.filter(o => !requested.includes(o));  
   await browser.permissions.remove({
-    origins: relinquished,
-    permissions: [ 'cookies' ]
+    origins: relinquished
   });
 
   return true;

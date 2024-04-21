@@ -9,7 +9,7 @@ const state = {
 const settings = {
   exePath: null,
   concurrentJobsLimit: 1,
-  sendCookiesYoutube: false
+  sendCookieDomains: []
 };
 
 // Get initial settings values.
@@ -122,26 +122,26 @@ class Job {
   create () {
     // Send a create-job message to the native-app.
     openPort();
-    return browser.storage.local.get({ props: {} }).then(result => {
+    return browser.storage.local.get({ props: {} }).then(async result => {
       // Get a cookie jar for the job.
-      return getCookieJarForVideo(this.props.videoUrl).then(cookieJar => {
-        state.port.postMessage({
-          topic: 'create-job',
-          data: {
-            jobId: this.id,
-            // Merge the default props and the job props.
-            props: Object.assign({ cookieJar }, result.props, this.props)
-          }
-        });
-  
-        // Flag this job as active.
-        this.state = 'active';
-  
-        // Make the icon blue because a job is running.
-        browser.browserAction.setIcon({
-          path: 'icons/film-blue.svg'
-        });
+      const cookieFile = (this.props.updateExe) ? null : await getCookieJarForVideo(this.props.videoUrl);
+      
+      state.port.postMessage({
+        topic: 'create-job',
+        data: {
+          jobId: this.id,
+          // Merge the default props and the job props.
+          props: Object.assign({ cookieJar: cookieFile }, result.props, this.props)
+        }
       });
+
+      // Flag this job as active.
+      this.state = 'active';
+
+      // Make the icon blue because a job is running.
+      browser.browserAction.setIcon({
+        path: 'icons/film-blue.svg'
+      });      
     });
   }
 
@@ -207,17 +207,16 @@ class CookieJar {
         
     return this.cookies.reduce((data, cookie) => {
       // yt-dlp will reject leading dot on domain.
-      let domain = cookie.domain.startsWith('.') ? cookie.domain.slice(1) : cookie.domain;      
-      let entry = `${domain}\t`;      
-      entry += `${cookie.hostOnly?'true':'false'}\t`;
+      let entry = `${cookie.domain}\t`;      
+      entry += `${cookie.hostOnly?'FALSE':'TRUE'}\t`;
       entry += `${cookie.path}\t`;
-      entry += `${cookie.secure?'true':'false'}\t`;
+      entry += `${cookie.secure?'TRUE':'FALSE'}\t`;
       entry += `${cookie.expirationDate||sessionExpirationDate}\t`;
       entry += `${cookie.name}\t`;
       entry += `${cookie.value}`;
       data.push(entry);
       return data;
-    }, [ '# HTTP Cookie File' ]).join(newline);
+    }, [ '# Netscape HTTP Cookie File' ]).join(newline);
   }
 
 }
@@ -423,24 +422,25 @@ function onJobEnded (message) {
 /**
  * Get a cookie jar containing cookies for the video domain.
  */
-function getCookieJarForVideo (videoUrl) {
+async function getCookieJarForVideo (videoUrl) {
+  let cookieJar = new CookieJar();
   try {
     let url = new URL(videoUrl);
-    // Cookies for YouTube.
-    if (url.host.endsWith('youtube.com')) {
-      if (settings.sendCookiesYoutube) {
-        return browser.cookies.getAll({
-          domain: 'youtube.com'
-        }).then(cookies => {
-          let cookieJar = new CookieJar();
-          cookieJar.addAll(cookies);
-          return cookieJar.isEmpty() ? null : cookieJar.toString();
-        });
-      }
-    }
+
+    // Get the list of domains to include in the cookie jar.
+    let sendCookieDomains = settings.sendCookieDomains.flatMap(cookieDomain => {
+      return url.host.endsWith(cookieDomain.videoDomain) ? 
+        [ cookieDomain.videoDomain ].concat(cookieDomain.extraDomains) : 
+        [];
+    });
+
+    // Add all the domains to the cookie jar.
+    for (const domain of sendCookieDomains) {
+      cookieJar.addAll(await browser.cookies.getAll({ domain }));
+    }    
   } catch (error) {
-    console.log('could not determine domain for cookie jar');
+    console.log('could not determine domain for cookie jar', error);
   }
 
-  return Promise.resolve(null);
+  return cookieJar.isEmpty() ? null : cookieJar.toString();
 }
