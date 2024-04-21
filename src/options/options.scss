@@ -92,5 +92,30 @@
             display: none;
         }
     }
+}
 
+#cookie-domains {
+    width: 100%;
+    margin-bottom: $form-group-margin-bottom;
+
+    tr:not(:first-child) td {
+        padding-top: 4px;
+    }
+
+    td, th {
+        padding-left: 5px;
+        padding-right: 5px;
+
+        &.video-domain {
+            width: 33%;
+        }
+    
+        &.extra-domains {
+            width: 66%;
+        }
+    
+        &.actions {
+            width: 1%;
+        }
+    }    
 }

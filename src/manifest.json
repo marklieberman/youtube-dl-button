@@ -26,7 +26,7 @@
 
   "optional_permissions": [
     "cookies",
-    "*://youtube.com/*"
+    "<all_urls>"
   ],
 
   "options_ui": {

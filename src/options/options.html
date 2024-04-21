@@ -23,11 +23,11 @@
             <div class="form-row">
               <!-- exe path -->
               <div class="form-group col-md-9">
-                <label for="exePath">Path to youtube-dl/yt-dlp executable</label>
+                <label for="exePath">Path to yt-dlp executable</label>
                 <input class="form-control" type="text" id="exe-path"
                         required></input>
                 <small class="form-text text-muted">
-                  Provide the absolute path to youtube-dl/yt-dlp.
+                  Provide the absolute path to yt-dlp.
                 </small>
                 <small class="invalid-feedback">
                   This is required or the addon cannot function.
@@ -51,7 +51,7 @@
                 <hr>
                 <h5>Parameter Sets</h5>
                 <p>
-                  Easily invoke youtube-dl/yt-dlp using different combinations of settings and switches. The addon 
+                  Easily invoke yt-dlp using different combinations of settings and switches. The addon 
                   provides two built-in profiles for the Default Download <i class="fas fa-download"></i> and Audio 
                   Download <i class="fas fa-music"></i> buttons in the popup. You may also add custom parameter sets
                   while will appear in the popup.
@@ -78,16 +78,21 @@
                 </div>
               </div>
             </div>
+            <table id="cookie-domains" class="table">
+              <thead>
+                <tr>
+                  <th class="video-domain">Video domain</th>
+                  <th class="extra-domains">Additional cookie domains to send to yt-dlp</th>
+                  <th class="actions"></th>
+                </tr>
+              </thead>
+              <tbody id="cookie-domain-list"></tbody>
+            </table>
             <div class="form-row">
-              <!-- cookies: youtube -->
               <div class="form-group col-md-12">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="send-cookies-youtube">
-                  <label class="form-check-label text-dark" for="send-cookies-youtube">
-                    Send cookies for YouTube video downloads.
-                    This will allow you to download age restricted videos if you are signed in to YouTube.
-                  </label>
-                </div>
+                <button class="btn btn-secondary" type="button" id="add-cookie-domain">
+                  Add Cookie Domain
+                </button>
               </div>
             </div>
 
@@ -240,18 +245,17 @@
                       Template to apply when naming downloaded files.
                     </small>
                   </div>
-
                 </div>
-                <div class="form-row">
 
+                <div class="form-row">
                   <!-- custom arguments -->
                   <div class="form-group col-md-6">
                     <label for="custom-args">
-                      Custom youtube-dl/yt-dlp arguments
+                      Custom yt-dlp arguments
                     </label>
                     <input class="form-control no-validate" type="text" name="custom-args"></input>
                     <small class="form-text text-muted">
-                      Additional arguments to pass to youtube-dl/yt-dlp on the commandline.
+                      Additional arguments to pass to yt-dlp on the commandline.
                     </small>
                   </div>
 
@@ -262,13 +266,30 @@
                     </label>
                     <input class="form-control no-validate" type="text" name="post-process-script"></input>
                     <small class="form-text text-muted">
-                      Invoke a script after youtube-dl/yt-dlp is finished running.
+                      Invoke a script after yt-dlp is finished running.
                     </small>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </template>
+
+        <!-- cookies template -->
+        <template id="send-cookie-template">
+          <tr>
+            <td>
+              <input class="form-control" type="text" name="video-domain" placeholder="example.com" required></input>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="extra-domains" placeholder="logon-example.com"></input>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-secondary delete" type="button" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button> 
+            </td>
+          </tr>
         </template>
       </div>
     </form>

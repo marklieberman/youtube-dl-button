@@ -1,84 +1,35 @@
 'use strict';
 
-/**
- * Helper for managing optional cookies and host permissions.
- */
-class CookieOriginsHelper {
-  constructor () {
-    this.remaining = [
-      '*://youtube.com/*'
-    ];
-    this.requested = [];
-  }
-
-  /**
-   * Add an origin to request.
-   */
-  requestOrigin (origin) {
-    this.remaining = this.remaining.filter(v => v !== origin);
-    this.requested.push(origin);
-  }
-
-  /**
-   * Prompt for permissions.
-   */
-  async applyPermissions () {
-    let granted = true;
-    if (this.requested.length) {
-      // Aquire all requested host permissions.
-      granted = await browser.permissions.request({
-        origins: this.requested,
-        permissions: [ 'cookies' ]
-      });
-    } else {
-      // Nothing requested; release cookies.
-      await browser.permissions.remove({
-        permissions: [ 'cookies' ]
-      });
-    }
-    if (this.remaining.length) {
-      // Remove all unused host permissions.
-      await browser.permissions.remove({
-        origins: this.remaining
-      });
-    }
-    return granted;
-  }
-
-  /**
-   * Remove all permissions.
-   */
-  async removeAllPermissions () {
-    await browser.permissions.remove({
-      origins: this.remaining.concat(this.requested),
-      permissions: [ 'cookies' ],
-    });
-  }
-}
-
 const divToPropsMap = new WeakMap();
+const trToCookieDomainMap = new WeakMap();
 
 const el = {
   optionsForm: document.getElementById('options-form'),
   buttonAddProps: document.getElementById('add-props'),
+  buttonAddCookieDomain: document.getElementById('add-cookie-domain'),
   buttonBackupSettings: document.getElementById('backup-settings'),
   fileRestoreSettings: document.getElementById('restore-settings'),
   inputExePath: document.getElementById('exe-path'),
   inputConcurrentJobsLimit: document.getElementById('concurrent-jobs-limit'),
-  inputSendCookiesYoutube: document.getElementById('send-cookies-youtube'),
   divPropsList: document.getElementById('props-list'),
-  templateProps: document.getElementById('props-template')
+  divCookieDomainList: document.getElementById('cookie-domain-list'),
+  templateProps: document.getElementById('props-template'),
+  templateSendCookieRow: document.getElementById('send-cookie-template')
 };
 
 browser.storage.local.get({
   exePath: '',
   concurrentJobsLimit: 1,
-  sendCookiesYoutube: false,
-  props: []
+  props: [],
+  sendCookieDomains: []
 }).then(populateSettings);
 
 // Bind event handlers to the form.
 el.buttonAddProps.addEventListener('click', () => createPropsConfig({}).scrollIntoView());
+el.buttonAddCookieDomain.addEventListener('click', () => createCookieDomainConfig({
+  videoDomain: '',
+  extraDomains: []
+}).scrollIntoView());
 el.buttonBackupSettings.addEventListener('click', () => backupSettings());
 el.optionsForm.addEventListener('submit', saveOptions);
 el.fileRestoreSettings.addEventListener('change', () => restoreSettings());
@@ -88,8 +39,8 @@ function populateSettings (results) {
   el.divPropsList.innerText = '';  
   el.inputExePath.value = results.exePath || '';
   el.inputConcurrentJobsLimit.value = results.concurrentJobsLimit || 1;
-  el.inputSendCookiesYoutube.checked = !!results.sendCookiesYoutube;
   results.props.forEach(createPropsConfig);
+  results.sendCookieDomains.forEach(createCookieDomainConfig);
 }
 
 function createPropsConfig (props, index = -1) {
@@ -199,6 +150,55 @@ function updatePropsConfigValidation (tpl) {
   }
 }
 
+function createCookieDomainConfig (cookieDomain) {
+  let template = document.importNode(el.templateSendCookieRow.content, true);
+  let tpl = {
+    divCookieDomain: template.firstElementChild,    
+    inputVideoDomain: template.querySelector('[name="video-domain"]'),
+    inputExtraDomains: template.querySelector('[name="extra-domains"]'),
+    buttonDelete: template.querySelector('button.delete')
+  };
+
+  // Configure the form.
+  tpl.inputVideoDomain.value = cookieDomain.videoDomain;
+  tpl.inputExtraDomains.value = cookieDomain.extraDomains.join(', ');
+
+  // Bind event handlers to the form.
+  tpl.buttonDelete.addEventListener('click', () => tpl.divCookieDomain.parentNode.removeChild(tpl.divCookieDomain));
+
+  el.divCookieDomainList.appendChild(template);
+  trToCookieDomainMap.set(tpl.divCookieDomain, () => ({    
+    videoDomain: tpl.inputVideoDomain.value,
+    extraDomains: tpl.inputExtraDomains.value
+      .split(',')
+      .map(d => d.trim())
+      .filter(d => d)
+  }));
+  return tpl.divProps;
+}
+
+async function applyCookiePermissions (requested) {
+  // Aquire all requested host permissions.  
+  if (requested.length) {    
+    if (!await browser.permissions.request({
+      origins: requested,
+      permissions: [ 'cookies' ]
+    })) {
+      return false;
+    }
+  }
+  
+  // Relinquish permission from removed domains.
+  let permitted = (await browser.permissions.getAll()).origins;  
+  let relinquished = permitted.filter(o => !requested.includes(o));  
+  await browser.permissions.remove({
+    origins: relinquished,
+    permissions: [ 'cookies' ]
+  });
+
+  return true;
+}
+
 // Save the options to local storage.
 async function saveOptions (event) {
   if (event) {
@@ -210,27 +210,34 @@ async function saveOptions (event) {
     return;
   }
 
-  // Aquire or release optional permissions for cookies.
-  let origins = new CookieOriginsHelper();
-  if (el.inputSendCookiesYoutube.checked) {
-    origins.requestOrigin('*://youtube.com/*');
-  }
-  if (!(await origins.applyPermissions())) {
-    // Permissions rejected; remove all permissions and disable features.
-    origins.removeAllPermissions();
-    el.inputSendCookiesYoutube.checked = false;
-  }
-
   let props = [].slice.call(el.divPropsList.children)
     .filter(element => element.tagName === 'DIV')
     .map(divProps => divToPropsMap.get(divProps)());
+
+  let sendCookieDomains = [].slice.call(el.divCookieDomainList.children)
+    .filter(element => element.tagName === 'TR')
+    .map(trCookieDomain => trToCookieDomainMap.get(trCookieDomain)())
+    .filter(cookieDomain => cookieDomain.videoDomain);
+
+  // Aquire or release optional permissions for cookies.
+  let cookieOrigins = [];
+  sendCookieDomains.forEach(cookieDomain => {
+    cookieOrigins.push(`*://${cookieDomain.videoDomain}/*`);
+    cookieDomain.extraDomains.forEach(extraDomain => {
+      cookieOrigins.push(`*://${extraDomain}/*`);
+    });
+  });
+  if (!(await applyCookiePermissions(cookieOrigins))) {
+    alert('Settings have not been saved');
+    return;
+  }
 
   // Save all settings.
   await browser.storage.local.set({
     exePath: el.inputExePath.value,
     concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value),
-    sendCookiesYoutube: el.inputSendCookiesYoutube.checked,
-    props
+    props,
+    sendCookieDomains
   });
 
   alert('Settings have been saved');
@@ -242,8 +249,8 @@ async function backupSettings () {
   let backupSettings = await browser.storage.local.get({
     exePath: null,
     concurrentJobsLimit: 1,
-    sendCookiesYoutube: null,
-    props: []
+    props: [],
+    sendCookieDomains: []
   });
 
   // Wrap the settings in an envelope.
