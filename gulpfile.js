@@ -2,7 +2,7 @@
 
 var gulp   = require('gulp'),
     eslint = require('gulp-eslint'),
-    sass   = require('gulp-sass'),
+    sass   = require('gulp-sass')(require('sass')),
     zip    = require('gulp-zip');
 
 var sources = {
