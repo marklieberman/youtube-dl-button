@@ -66,11 +66,11 @@ class PerDomainSettings {
 
 // Get the URL of the active tab.
 let promises = [];
-promises.push(browser.tabs.executeScript({
-  file: '/content/scrape.js'
+promises.push(chrome.runtime.sendMessage({
+  topic: 'ydb-scrape-tab'
 }).then(data => {
-  let url = new URL(data[0].url),
-      metadata = data[0].metadata;
+  let url = new URL(data.url),
+      metadata = data.metadata;
 
   // Store metadata if any is available.
   el.inputMetadataUrl.value = url;
@@ -78,7 +78,7 @@ promises.push(browser.tabs.executeScript({
   el.inputMetadataTitle.value = metadata.title || null;
 
   // Also get the per-domain settings for this host.
-  return browser.storage.local.get({
+  return chrome.storage.local.get({
     domains: {}
   }).then(results => {
     let domainSettings = new PerDomainSettings(results.domains[url.host]);
@@ -93,7 +93,7 @@ promises.push(browser.tabs.executeScript({
 }));
 
 // Get the saved settings from local storage.
-promises.push(browser.storage.local.get(settings).then(results => {
+promises.push(chrome.storage.local.get(settings).then(results => {
   // Copy settings into settings object.
   Object.assign(settings, results);
 
@@ -213,7 +213,7 @@ function savePerDomainSettings () {
         template: el.inputTemplate.value,
         format: el.inputFormat.value
       });
-      return browser.storage.local.get({ domains: {} }).then(results => {
+      return chrome.storage.local.get({ domains: {} }).then(results => {
         if (domainSettings.isEmpty()) {
           // Remove the saved entry for this domain.
           delete results.domains[url.host];
@@ -221,7 +221,7 @@ function savePerDomainSettings () {
           // Update the saved entry for this domain.
           results.domains[url.host] = domainSettings;
         }
-        return browser.storage.local.set(results);
+        return chrome.storage.local.set(results);
       });
     }
   } catch (error) {
@@ -319,7 +319,7 @@ function openSettingsTab (tab) {
       // Save the selected tab to popup settings.
       if (settings.popup.settingsTab !== tab) {
         settings.popup.settingsTab = tab;
-        browser.storage.local.set({ popup: settings.popup });
+        chrome.storage.local.set({ popup: settings.popup });
       }
     } else {
       header.classList.remove('active');
@@ -354,7 +354,7 @@ function createJob (props) {
   // Ensure that required settings have been configured.
   if (!settings.exePath) {
     window.alert('You must finish configuring the addon.');
-    browser.runtime.openOptionsPage().then(() => window.close());
+    chrome.runtime.openOptionsPage().then(() => window.close());
     return;
   }
 
@@ -391,11 +391,11 @@ function createJob (props) {
   // Complain if any of the required parameters are empty.
   if (!jobProps.saveIn || !jobProps.template || !jobProps.format) {
     window.alert('You must finish configuring the addon.');
-    browser.runtime.openOptionsPage().then(() => window.close());
+    chrome.runtime.openOptionsPage().then(() => window.close());
     return;
   }
   
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-create-job',
     data: {
       props: jobProps
@@ -407,7 +407,7 @@ function createJob (props) {
  * Cancel a running job.
  */
 function cancelJob (jobId) {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-cancel-job',
     data: {
       jobId
@@ -419,7 +419,7 @@ function cancelJob (jobId) {
  * Retry a failed or cancelled job.
  */
 function retryJob (jobId) {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-retry-job',
     data: {
       jobId
@@ -431,7 +431,7 @@ function retryJob (jobId) {
  * Update the youtube-dl executable.
  */
 function updateExe () {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-update-exe',
     data: {}
   });
@@ -441,7 +441,7 @@ function updateExe () {
  * Remove all completed jobs from the list.
  */
 function cleanUpJobs () {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-clean-jobs',
     data: {}
   }).then(updateJobsList);
@@ -461,7 +461,7 @@ function startPollingJobs () {
  * Refresh the list of jobs.
  */
 function refreshJobs () {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     topic: 'ydb-get-jobs',
     data: {}
   }).then(updateJobsList);

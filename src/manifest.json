@@ -1,17 +1,15 @@
 {
-
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Youtube-DL Button",
   "version": "1.1.5",
+  "description": "Add a browser action that sends the tab or a URL to youtube-dl.",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "youtube-dl-button@liebs.ca",
-      "strict_min_version": "57.0"
+      "strict_min_version": "109.0"
     }
   },
-
-  "description": "Add a browser action that sends the tab or a URL to youtube-dl.",
 
   "icons": {
     "48": "icons/film-black.svg",
@@ -21,22 +19,25 @@
   "permissions": [
     "activeTab",
     "nativeMessaging",
-    "storage"
+    "storage",
+    "scripting"
   ],
 
   "optional_permissions": [
-    "cookies",
+    "cookies"
+  ],
+
+  "optional_host_permissions": [
     "<all_urls>"
   ],
 
   "options_ui": {
+    "page": "options/options.html",
     "open_in_tab": true,
-    "browser_style": false,
-    "page": "options/options.html"
+    "browser_style": false
   },
 
-  "browser_action": {
-    "browser_style": false,
+  "action": {
     "default_icon": "icons/film-dark.svg",
     "default_popup": "popup/popup.html",
     "theme_icons": [
@@ -49,9 +50,11 @@
   },
 
   "background": {
+    "service_worker": "background/background.js",
     "scripts": [
       "background/background.js",
       "background/updates.js"
-    ]
+    ],
+    "type": "module"
   }
 }

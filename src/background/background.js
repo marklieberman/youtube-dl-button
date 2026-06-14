@@ -1,4 +1,4 @@
-'use strict';
+import './updates.js';
 
 const state = {
   port: null,
@@ -13,7 +13,7 @@ const settings = {
 };
 
 // Get initial settings values.
-browser.storage.local.get(settings).then(results => {
+chrome.storage.local.get(settings).then(results => {
   Object.assign(settings, results);
 });
 
@@ -23,7 +23,7 @@ browser.storage.local.get(settings).then(results => {
 /**
  * Invoked when settings are changed.
  */
-browser.storage.onChanged.addListener((changes, area) => {
+chrome.storage.onChanged.addListener((changes, area) => {
   let keys = Object.keys(settings);
   if (area === 'local') {
     Object.keys(changes).forEach(changeKey => {
@@ -37,13 +37,15 @@ browser.storage.onChanged.addListener((changes, area) => {
 /**
  * Invoked by messages from popups and content scripts.
  */
-browser.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
   // Decorate the message with the sender tab ID.
   if (sender.tab) {
     message.tabId = sender.tab.id;
   }
 
   switch (message.topic) {
+  case 'ydb-scrape-tab':
+    return onScrapeTab(message);
   case 'ydb-get-jobs':
     return onGetJobs(message);
   case 'ydb-create-job':
@@ -122,7 +124,7 @@ class Job {
   create () {
     // Send a create-job message to the native-app.
     openPort();
-    return browser.storage.local.get({ props: {} }).then(async result => {
+    return chrome.storage.local.get({ props: {} }).then(async result => {
       // Get a cookie jar for the job.
       const cookieFile = (this.props.updateExe) ? null : await getCookieJarForVideo(this.props.videoUrl);
       
@@ -139,7 +141,7 @@ class Job {
       this.state = 'active';
 
       // Make the icon blue because a job is running.
-      browser.browserAction.setIcon({
+      chrome.action.setIcon({
         path: 'icons/film-blue.svg'
       });      
     });
@@ -230,7 +232,7 @@ class CookieJar {
  */
 function openPort () {
   if (!state.port) {
-    state.port = browser.runtime.connectNative('youtube_dl_button');
+    state.port = chrome.runtime.connectNative('youtube_dl_button');
     state.port.onMessage.addListener(onPortMessage);
     state.port.onDisconnect.addListener(onPortDisconnect);
   }
@@ -267,6 +269,24 @@ function findNextWaitingJob () {
     }
   }
   return null;
+}
+
+/**
+ * Scrape the active tab for media. 
+ */
+function onScrapeTab() {
+  return chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+    return chrome.scripting.executeScript({
+      target: {
+        tabId: tabs[0].id
+      },
+      files: [ 
+        '/content/scrape.js' 
+      ]
+    }).then(data => {
+      return data[0].result;
+    });
+  });
 }
 
 /**
@@ -413,7 +433,7 @@ function onJobEnded (message) {
     state.port = null;
 
     // Make the icon dark because the queue is idle.
-    browser.browserAction.setIcon({
+    chrome.action.setIcon({
       path: null
     });
   }
@@ -436,7 +456,7 @@ async function getCookieJarForVideo (videoUrl) {
 
     // Add all the domains to the cookie jar.
     for (const domain of sendCookieDomains) {
-      cookieJar.addAll(await browser.cookies.getAll({ domain }));
+      cookieJar.addAll(await chrome.cookies.getAll({ domain }));
     }    
   } catch (error) {
     console.log('could not determine domain for cookie jar', error);

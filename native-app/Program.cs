@@ -85,7 +85,7 @@ namespace YoutubeDlButton
         }
 
         /// <summary>
-        /// Handle messages from the browser.
+        /// Handle messages from the chrome.
         /// </summary>
         /// <param name="message"></param>
         static void OnMessage(JObject message) {

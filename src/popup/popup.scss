@@ -10,11 +10,14 @@ body {
   justify-content: flex-start;
   align-items: stretch;
 
+  width: $popup-width;
+  height: $popup-height;
+
   @media screen and (min-width: 400px) {
     min-width: $popup-width;
     max-width: $popup-width;    
   }
-
+  
   min-height: $popup-height;
   max-height: $popup-height;
 

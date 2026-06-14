@@ -17,7 +17,7 @@ const el = {
   templateSendCookieRow: document.getElementById('send-cookie-template')
 };
 
-browser.storage.local.get({
+chrome.storage.local.get({
   exePath: '',
   concurrentJobsLimit: 1,
   props: [],
@@ -180,7 +180,7 @@ function createCookieDomainConfig (cookieDomain) {
 async function applyCookiePermissions (requested) {
   // Aquire all requested host permissions.  
   if (requested.length) {    
-    if (!await browser.permissions.request({
+    if (!await chrome.permissions.request({
       origins: requested,
       permissions: [ 'cookies' ]
     })) {
@@ -189,9 +189,9 @@ async function applyCookiePermissions (requested) {
   }
   
   // Relinquish permission from removed domains.
-  let permitted = (await browser.permissions.getAll()).origins;  
+  let permitted = (await chrome.permissions.getAll()).origins;  
   let relinquished = permitted.filter(o => !requested.includes(o));  
-  await browser.permissions.remove({
+  await chrome.permissions.remove({
     origins: relinquished
   });
 
@@ -232,7 +232,7 @@ async function saveOptions (event) {
   }
 
   // Save all settings.
-  await browser.storage.local.set({
+  await chrome.storage.local.set({
     exePath: el.inputExePath.value,
     concurrentJobsLimit: Number(el.inputConcurrentJobsLimit.value),
     props,
@@ -245,7 +245,7 @@ async function saveOptions (event) {
 // Backup settings to a JSON file which is downloaded.
 async function backupSettings () {
   // Get the settings to be backed up.
-  let backupSettings = await browser.storage.local.get({
+  let backupSettings = await chrome.storage.local.get({
     exePath: null,
     concurrentJobsLimit: 1,
     props: [],
@@ -262,7 +262,7 @@ async function backupSettings () {
     String(backupData.timestamp.getDate()).padStart(2, '0')
   ].join('-') + '.json';
   // Record the current addon version.
-  let selfInfo = await browser.management.getSelf();
+  let selfInfo = await chrome.management.getSelf();
   backupData.addonId = selfInfo.id;
   backupData.version = selfInfo.version;
 
