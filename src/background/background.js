@@ -4,6 +4,7 @@ const state = {
   port: null,
   jobs: [],
   jobId: 1,
+  theme: 'light'
 };
 
 const settings = {
@@ -142,7 +143,13 @@ class Job {
 
       // Make the icon blue because a job is running.
       chrome.action.setIcon({
-        path: 'icons/film-blue.svg'
+        path: {
+          "128": "/icons/film-blue-128.png",
+          "64": "/icons/film-blue-64.png",
+          "48": "/icons/film-blue-48.png",
+          "32": "/icons/film-blue-32.png",
+          "16": "/icons/film-blue-16.png"
+        }
       });      
     });
   }
@@ -274,7 +281,9 @@ function findNextWaitingJob () {
 /**
  * Scrape the active tab for media. 
  */
-function onScrapeTab() {
+function onScrapeTab(message) {
+  state.theme = message.data.theme;
+
   return chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
     return chrome.scripting.executeScript({
       target: {
@@ -433,8 +442,14 @@ function onJobEnded (message) {
     state.port = null;
 
     // Make the icon dark because the queue is idle.
-    chrome.action.setIcon({
-      path: null
+    chrome.action.setIcon({ 
+      path: {
+        "128": `/icons/film-${state.theme}-128.png`,
+        "64": `/icons/film-${state.theme}-64.png`,
+        "48": `/icons/film-${state.theme}-48.png`,
+        "32": `/icons/film-${state.theme}-32.png`,
+        "16": `/icons/film-${state.theme}-16.png`
+      }
     });
   }
 }

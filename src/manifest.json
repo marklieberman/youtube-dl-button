@@ -12,8 +12,11 @@
   },
 
   "icons": {
-    "48": "icons/film-black.svg",
-    "96": "icons/film-black.svg"
+    "128": "icons/film-black-128.png",
+    "64": "icons/film-black-64.png",
+    "48": "icons/film-black-48.png",
+    "32": "icons/film-black-32.png",
+    "16": "icons/film-black-16.png"
   },
 
   "permissions": [
@@ -38,23 +41,43 @@
   },
 
   "action": {
-    "default_icon": "icons/film-dark.svg",
+    "default_icon":{
+      "128": "icons/film-dark-128.png",
+      "64": "icons/film-dark-64.png",
+      "48": "icons/film-dark-48.png",
+      "32": "icons/film-dark-32.png",
+      "16": "icons/film-dark-16.png"
+    },
     "default_popup": "popup/popup.html",
-    "theme_icons": [
-      {
-        "light": "icons/film-light.svg",
-        "dark": "icons/film-dark.svg",
-        "size": 32
-      }
-    ]
+    "theme_icons": [{
+      "light": "icons/film-light-128.png",
+      "dark": "icons/film-dark-128.png",
+      "size": 128
+    },{
+      "light": "icons/film-light-64.png",
+      "dark": "icons/film-dark-64.png",
+      "size": 64
+    },{
+      "light": "icons/film-light-48.png",
+      "dark": "icons/film-dark-48.png",
+      "size": 48
+    },{
+      "light": "icons/film-light-32.png",
+      "dark": "icons/film-dark-32.png",
+      "size": 32
+    },{
+      "light": "icons/film-light-16.png",
+      "dark": "icons/film-dark-16.png",
+      "size": 16
+    }]
   },
 
   "background": {
     "service_worker": "background/background.js",
-    "scripts": [
-      "background/background.js",
-      "background/updates.js"
-    ],
+    // "scripts": [
+    //   "background/background.js",
+    //   "background/updates.js"
+    // ],
     "type": "module"
   }
 }

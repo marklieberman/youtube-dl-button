@@ -6,4 +6,4 @@
 
 * Remove "background.scripts" during Edge build.
 
-* Rasterize icons for Edge.
+* Native app is not terminating when done in Edge.

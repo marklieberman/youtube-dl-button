@@ -67,7 +67,10 @@ class PerDomainSettings {
 // Get the URL of the active tab.
 let promises = [];
 promises.push(chrome.runtime.sendMessage({
-  topic: 'ydb-scrape-tab'
+  topic: 'ydb-scrape-tab',
+  data: {
+    theme: window.matchMedia('(prefers-color-scheme: dark)') ? 'dark' : 'light'
+  }
 }).then(data => {
   let url = new URL(data.url),
       metadata = data.metadata;
