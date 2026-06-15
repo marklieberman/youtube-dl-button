@@ -89,7 +89,7 @@ export function zipFirefox () {
     .pipe(gulp.dest('dist'));
 }
 
-export const sass2 = sassTask;
+export const sass = sassTask;
 export const lint = lintTask;
 
 export const watch = gulp.series(
