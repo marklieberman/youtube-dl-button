@@ -1,9 +1,10 @@
-'use strict';
+import './updates.js';
 
 const state = {
   port: null,
   jobs: [],
   jobId: 1,
+  theme: 'light'
 };
 
 const settings = {
@@ -13,7 +14,7 @@ const settings = {
 };
 
 // Get initial settings values.
-browser.storage.local.get(settings).then(results => {
+chrome.storage.local.get(settings).then(results => {
   Object.assign(settings, results);
 });
 
@@ -23,7 +24,7 @@ browser.storage.local.get(settings).then(results => {
 /**
  * Invoked when settings are changed.
  */
-browser.storage.onChanged.addListener((changes, area) => {
+chrome.storage.onChanged.addListener((changes, area) => {
   let keys = Object.keys(settings);
   if (area === 'local') {
     Object.keys(changes).forEach(changeKey => {
@@ -37,13 +38,15 @@ browser.storage.onChanged.addListener((changes, area) => {
 /**
  * Invoked by messages from popups and content scripts.
  */
-browser.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
   // Decorate the message with the sender tab ID.
   if (sender.tab) {
     message.tabId = sender.tab.id;
   }
 
   switch (message.topic) {
+  case 'ydb-scrape-tab':
+    return onScrapeTab(message);
   case 'ydb-get-jobs':
     return onGetJobs(message);
   case 'ydb-create-job':
@@ -83,7 +86,7 @@ function onPortMessage (message) {
  */
 function onPortDisconnect (port) {
   if (port.error) {
-    console.log('disconnected with error', port.error);
+    console.error('disconnected with error', port.error);
   }
   state.port = null;
 
@@ -122,7 +125,7 @@ class Job {
   create () {
     // Send a create-job message to the native-app.
     openPort();
-    return browser.storage.local.get({ props: {} }).then(async result => {
+    return chrome.storage.local.get({ props: {} }).then(async result => {
       // Get a cookie jar for the job.
       const cookieFile = (this.props.updateExe) ? null : await getCookieJarForVideo(this.props.videoUrl);
       
@@ -139,8 +142,14 @@ class Job {
       this.state = 'active';
 
       // Make the icon blue because a job is running.
-      browser.browserAction.setIcon({
-        path: 'icons/film-blue.svg'
+      chrome.action.setIcon({
+        path: {
+          '128': '/icons/film-blue-128.png',
+          '64': '/icons/film-blue-64.png',
+          '48': '/icons/film-blue-48.png',
+          '32': '/icons/film-blue-32.png',
+          '16': '/icons/film-blue-16.png'
+        }
       });      
     });
   }
@@ -230,7 +239,7 @@ class CookieJar {
  */
 function openPort () {
   if (!state.port) {
-    state.port = browser.runtime.connectNative('youtube_dl_button');
+    state.port = chrome.runtime.connectNative('youtube_dl_button');
     state.port.onMessage.addListener(onPortMessage);
     state.port.onDisconnect.addListener(onPortDisconnect);
   }
@@ -267,6 +276,26 @@ function findNextWaitingJob () {
     }
   }
   return null;
+}
+
+/**
+ * Scrape the active tab for media. 
+ */
+function onScrapeTab(message) {
+  state.theme = message.data.theme;
+
+  return chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+    return chrome.scripting.executeScript({
+      target: {
+        tabId: tabs[0].id
+      },
+      files: [ 
+        '/content/scrape.js' 
+      ]
+    }).then(data => {
+      return data[0].result;
+    });
+  });
 }
 
 /**
@@ -364,7 +393,7 @@ function onJobOutput (message) {
     job.append(message.data.output);
 
     // Try to parse out the filename from the output.
-    let match = /^\[ffmpeg\] Merging formats into "(.+)"$/.exec(message.data.output);
+    let match = /^\[ffmpeg\] Merging formats into '(.+)'$/.exec(message.data.output);
     if (match) {
       job.destination = match[1];
       return;
@@ -413,8 +442,14 @@ function onJobEnded (message) {
     state.port = null;
 
     // Make the icon dark because the queue is idle.
-    browser.browserAction.setIcon({
-      path: null
+    chrome.action.setIcon({ 
+      path: {
+        '128': `/icons/film-${state.theme}-128.png`,
+        '64': `/icons/film-${state.theme}-64.png`,
+        '48': `/icons/film-${state.theme}-48.png`,
+        '32': `/icons/film-${state.theme}-32.png`,
+        '16': `/icons/film-${state.theme}-16.png`
+      }
     });
   }
 }
@@ -436,10 +471,10 @@ async function getCookieJarForVideo (videoUrl) {
 
     // Add all the domains to the cookie jar.
     for (const domain of sendCookieDomains) {
-      cookieJar.addAll(await browser.cookies.getAll({ domain }));
+      cookieJar.addAll(await chrome.cookies.getAll({ domain }));
     }    
   } catch (error) {
-    console.log('could not determine domain for cookie jar', error);
+    console.error('could not determine domain for cookie jar', error);
   }
 
   return cookieJar.isEmpty() ? null : cookieJar.toString();

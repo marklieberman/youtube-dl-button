@@ -21,13 +21,16 @@ namespace YoutubeDlButton
 #if DEBUG
             Debugger.Launch();
 #endif
-
-            while (true)
-            {
-                // Read messages from the addon over standard input.
-                var message = await ReadMessage();
-                if (message != null)
+            using (var stdin = Console.OpenStandardInput()) {
+                while (true)
                 {
+                    // Read messages from the addon over standard input.
+                    var message = await ReadMessage(stdin);
+                    if (message == null)
+                    {
+                        break;                        
+                    }
+
                     OnMessage(message);
                 }
             }
@@ -37,21 +40,17 @@ namespace YoutubeDlButton
         /// Read a message from standard input.
         /// </summary>
         /// <returns></returns>
-        static async Task<JObject> ReadMessage ()
+        static async Task<JObject> ReadMessage (Stream stdin)
         {
-            var stdin = Console.OpenStandardInput();
-            using (var reader = new BinaryReader(stdin, Encoding.UTF8))
+            var lengthBytes = new byte[4];
+            await stdin.ReadAsync(lengthBytes, 0, 4);
+            var length = BitConverter.ToInt32(lengthBytes, 0);
+            if (length > 0)
             {
-                var lengthBytes = new byte[4];
-                await stdin.ReadAsync(lengthBytes, 0, 4);
-                var length = BitConverter.ToInt32(lengthBytes, 0);
-                if (length > 0)
-                {
-                    var bodyBuffer = new byte[length];
-                    await stdin.ReadAsync(bodyBuffer, 0, length);
-                    var json = Encoding.UTF8.GetString(bodyBuffer);
-                    return JObject.Parse(json);
-                }
+                var bodyBuffer = new byte[length];
+                await stdin.ReadAsync(bodyBuffer, 0, length);
+                var json = Encoding.UTF8.GetString(bodyBuffer);
+                return JObject.Parse(json);
             }
             return null;
         }
@@ -85,7 +84,7 @@ namespace YoutubeDlButton
         }
 
         /// <summary>
-        /// Handle messages from the browser.
+        /// Handle messages from the chrome.
         /// </summary>
         /// <param name="message"></param>
         static void OnMessage(JObject message) {

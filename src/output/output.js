@@ -10,7 +10,7 @@ let url = new window.URL(window.location.href);
 
 let jobId = Number(url.searchParams.get('jobId'));
 
-browser.runtime.sendMessage({
+chrome.runtime.sendMessage({
   topic: 'ydb-get-jobs',
   data: {
     jobId
