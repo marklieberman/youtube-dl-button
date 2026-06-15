@@ -4,6 +4,4 @@
 
 ## Manifest V3
 
-* Remove "background.scripts" during Edge build.
-
 * Native app is not terminating when done in Edge.

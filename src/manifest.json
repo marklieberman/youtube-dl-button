@@ -74,10 +74,10 @@
 
   "background": {
     "service_worker": "background/background.js",
-    // "scripts": [
-    //   "background/background.js",
-    //   "background/updates.js"
-    // ],
+    "scripts": [
+      "background/background.js",
+      "background/updates.js"
+    ],
     "type": "module"
   }
 }

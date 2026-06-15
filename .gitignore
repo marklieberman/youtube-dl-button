@@ -4,6 +4,7 @@
 node_modules/*
 src/**/*.css
 dist/*
+.tmp
 
 # native app
 **/.vs/

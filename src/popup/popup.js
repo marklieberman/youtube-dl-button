@@ -91,7 +91,7 @@ promises.push(chrome.runtime.sendMessage({
     };
   });
 }).catch(error => {
-  console.log('failed to get active tab URL', error);
+  console.error('failed to get active tab URL', error);
   return null;
 }));
 
@@ -228,7 +228,7 @@ function savePerDomainSettings () {
       });
     }
   } catch (error) {
-    console.log('not saving per domain settings - invalid URL');
+    console.error('not saving per domain settings - invalid URL', error);
   }
   return Promise.resolve({});
 }
@@ -344,6 +344,7 @@ function validateCreateJob () {
       disabled = true;
     }
   } catch (error) {
+    console.log('invalid job', error);
     disabled = true;
   }
 

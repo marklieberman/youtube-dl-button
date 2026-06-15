@@ -16,6 +16,7 @@ if (data.url.includes('youtube.com/watch')) {
         }
     } catch (error) {
         // empty
+        console.log(error);
     }
 }
 

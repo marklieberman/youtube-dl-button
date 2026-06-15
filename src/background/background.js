@@ -86,7 +86,7 @@ function onPortMessage (message) {
  */
 function onPortDisconnect (port) {
   if (port.error) {
-    console.log('disconnected with error', port.error);
+    console.error('disconnected with error', port.error);
   }
   state.port = null;
 
@@ -144,11 +144,11 @@ class Job {
       // Make the icon blue because a job is running.
       chrome.action.setIcon({
         path: {
-          "128": "/icons/film-blue-128.png",
-          "64": "/icons/film-blue-64.png",
-          "48": "/icons/film-blue-48.png",
-          "32": "/icons/film-blue-32.png",
-          "16": "/icons/film-blue-16.png"
+          '128': '/icons/film-blue-128.png',
+          '64': '/icons/film-blue-64.png',
+          '48': '/icons/film-blue-48.png',
+          '32': '/icons/film-blue-32.png',
+          '16': '/icons/film-blue-16.png'
         }
       });      
     });
@@ -393,7 +393,7 @@ function onJobOutput (message) {
     job.append(message.data.output);
 
     // Try to parse out the filename from the output.
-    let match = /^\[ffmpeg\] Merging formats into "(.+)"$/.exec(message.data.output);
+    let match = /^\[ffmpeg\] Merging formats into '(.+)'$/.exec(message.data.output);
     if (match) {
       job.destination = match[1];
       return;
@@ -444,11 +444,11 @@ function onJobEnded (message) {
     // Make the icon dark because the queue is idle.
     chrome.action.setIcon({ 
       path: {
-        "128": `/icons/film-${state.theme}-128.png`,
-        "64": `/icons/film-${state.theme}-64.png`,
-        "48": `/icons/film-${state.theme}-48.png`,
-        "32": `/icons/film-${state.theme}-32.png`,
-        "16": `/icons/film-${state.theme}-16.png`
+        '128': `/icons/film-${state.theme}-128.png`,
+        '64': `/icons/film-${state.theme}-64.png`,
+        '48': `/icons/film-${state.theme}-48.png`,
+        '32': `/icons/film-${state.theme}-32.png`,
+        '16': `/icons/film-${state.theme}-16.png`
       }
     });
   }
@@ -474,7 +474,7 @@ async function getCookieJarForVideo (videoUrl) {
       cookieJar.addAll(await chrome.cookies.getAll({ domain }));
     }    
   } catch (error) {
-    console.log('could not determine domain for cookie jar', error);
+    console.error('could not determine domain for cookie jar', error);
   }
 
   return cookieJar.isEmpty() ? null : cookieJar.toString();
