@@ -9,8 +9,8 @@ namespace YoutubeDlButton
     class YoutubeDlRunner : IDisposable
     {
         // Matches log output that describes a file being downloaded.
-        private static Regex LogDownloadFile = new Regex(
-            @"^\[download\] Destination: (.+)$", 
+        private static Regex LogDestinationFile = new Regex(
+            @"^\[[^]]+\] Destination: (.+)$", 
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // Matches log output that describes a file already being downloaded.
@@ -192,7 +192,7 @@ namespace YoutubeDlButton
             try
             {
                 // Begin post-processing if youtube-dl exited cleanly.
-                if (((youtubeDlProcess?.ExitCode ?? 1) == 0) && !String.IsNullOrEmpty(Props.PostProcessScript))
+                if (!String.IsNullOrEmpty(Props.PostProcessScript) && Files.Count > 0)
                 {
                     PostProcess();
                 }
@@ -230,7 +230,7 @@ namespace YoutubeDlButton
                 string output = e.Data.Trim();
 
                 // Log output indicates a file was downloaded.
-                Match match = LogDownloadFile.Match(output);
+                Match match = LogDestinationFile.Match(output);
                 if (match.Success)
                 {
                     Files.Add(match.Groups[1].Value);
