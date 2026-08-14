@@ -31,6 +31,8 @@ const el = {
   buttonClearTemplate: document.getElementById('clear-template'),
   inputFormat: document.getElementById('format'),
   buttonClearFormat: document.getElementById('clear-format'),
+  inputCustomArgs: document.getElementById('custom-args'),
+  buttonClearCustomArgs: document.getElementById('clear-custom-args'),
   divJobsList: document.getElementById('jobs-list'),
   divEmptyList: document.getElementById('empty-list'),
   templateJobRow: document.getElementById('job-row-template'),
@@ -57,10 +59,11 @@ class PerDomainSettings {
     this.saveIn = data.saveIn || '';
     this.template = data.template || '';
     this.format = data.format || '';
+    this.customArgs = data.customArgs || '';
   }
 
   isEmpty() {
-    return !this.saveIn && !this.template && !this.format;
+    return !this.saveIn && !this.template && !this.format && !this.customArgs;
   }
 }
 
@@ -125,6 +128,7 @@ Promise.all(promises)
       el.inputSaveIn.value = domainSettings.saveIn;
       el.inputTemplate.value = domainSettings.template;
       el.inputFormat.value = domainSettings.format;
+      el.inputCustomArgs.value = domainSettings.customArgs;
     }
   })
   .finally(() => {
@@ -159,6 +163,9 @@ el.inputTemplate.addEventListener('change', () => {
 el.inputFormat.addEventListener('change', () => {
   savePopupSettings();
 });
+el.inputCustomArgs.addEventListener('change', () => {
+  savePopupSettings();
+});
 
 // Click
 el.buttonMainDowpdown.addEventListener('click', () => {
@@ -174,6 +181,10 @@ el.buttonClearTemplate.addEventListener('click', () => {
 });
 el.buttonClearFormat.addEventListener('click', () => {
   el.inputFormat.value = null;
+  savePopupSettings();
+});
+el.buttonClearCustomArgs.addEventListener('click', () => {
+  el.inputCustomArgs.value = null;
   savePopupSettings();
 });
 el.updateExe.addEventListener('click', () => {
@@ -214,8 +225,10 @@ function savePerDomainSettings () {
       let domainSettings = new PerDomainSettings({
         saveIn: el.inputSaveIn.value,
         template: el.inputTemplate.value,
-        format: el.inputFormat.value
+        format: el.inputFormat.value,
+        customArgs: el.inputCustomArgs.value
       });
+      console.log(domainSettings);
       return chrome.storage.local.get({ domains: {} }).then(results => {
         if (domainSettings.isEmpty()) {
           // Remove the saved entry for this domain.
@@ -385,11 +398,17 @@ function createJob (props) {
     postProcessScript: null
   };
 
+  // Combine custom arguments from the settings template and form.
+  let customArgs = [
+    (props.customArgs || defaultProps.customArgs),
+    el.inputCustomArgs.value
+  ].filter(v => v).join(' ');
+
   // Assign job props in form > parameter set > fallback parameters priority.
   jobProps.saveIn = el.inputSaveIn.value || props.saveIn || defaultProps.saveIn;
   jobProps.template = el.inputTemplate.value|| props.template || defaultProps.template;
   jobProps.format = el.inputFormat.value || props.format || defaultProps.format;
-  jobProps.customArgs = props.customArgs || defaultProps.customArgs;
+  jobProps.customArgs = customArgs;
   jobProps.postProcessScript = props.postProcessScript || defaultProps.postProcessScript;
 
   // Complain if any of the required parameters are empty.

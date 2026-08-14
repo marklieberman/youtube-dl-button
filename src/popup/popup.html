@@ -90,7 +90,7 @@
               <label>
                 Format Selection
                 <a class="text-muted"
-                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#format-selection"
+                   href="https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection"
                    target="_blank"
                    title="View youtube-dl documentation">
                   <i class="fa fa-info-circle"></i>
@@ -123,7 +123,7 @@
               <label>
                 Output Template
                 <a class="text-muted"
-                   href="https://github.com/rg3/youtube-dl/blob/master/README.md#output-template"
+                   href="https://github.com/ytdl-org/youtube-dl/blob/master/README.md#output-template"
                    target="_blank"
                    title="View youtube-dl documentation">
                   <i class="fa fa-info-circle"></i>
@@ -139,6 +139,36 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="col">
+            <div class="form-group">
+              <label>
+                Custom Arguments
+                <a class="text-muted"
+                   href="https://github.com/ytdl-org/youtube-dl/blob/master/README.md#options"
+                   target="_blank"
+                   title="View youtube-dl documentation">
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              </label>
+              <div class="input-group input-group-sm">
+                <input class="form-control" type="text" id="custom-args"
+                       list="arg-templates"></input>
+                <div class="input-group-append">
+                  <!-- clear template -->
+                  <button class="btn btn-secondary" id="clear-custom-args"
+                          title="Clear format">
+                    <i class="fa fa-eraser"></i>
+                  </button>
+                </div>
+              </div>
+              <datalist id="arg-templates">
+                <option value="--dateafter YYYYMMDD --datebefore YYYYMMDD"></option>
+                <option value="--playlist-start 1 --playlist-stop 10"></option>
+              </datalist>
             </div>
           </div>
         </div>
