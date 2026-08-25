@@ -1,7 +1,8 @@
 import './updates.js';
 
+let port = null;
+
 const state = {
-  port: null,
   jobs: [],
   jobId: 1,
   theme: 'light'
@@ -13,7 +14,11 @@ const settings = {
   sendCookieDomains: []
 };
 
-// Get initial settings values.
+// Get initial state and settings values.
+chrome.storage.session.get(state).then(results => {
+  console.log('restored', results);
+  Object.assign(state, results);
+});
 chrome.storage.local.get(settings).then(results => {
   Object.assign(settings, results);
 });
@@ -88,7 +93,7 @@ function onPortDisconnect (port) {
   if (port.error) {
     console.error('disconnected with error', port.error);
   }
-  state.port = null;
+  port = null;
 
   // Fail all ongoing jobs.
   state.jobs.forEach(job => {
@@ -97,6 +102,13 @@ function onPortDisconnect (port) {
     }
   });
 }
+
+/**
+ * Persist state on suspend.
+ */
+chrome.runtime.onSuspend.addListener(async () => {
+  await chrome.storage.session.set(state);  
+});
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Model 
@@ -129,7 +141,7 @@ class Job {
       // Get a cookie jar for the job.
       const cookieFile = (this.props.updateExe) ? null : await getCookieJarForVideo(this.props.videoUrl);
       
-      state.port.postMessage({
+      port.postMessage({
         topic: 'create-job',
         data: {
           jobId: this.id,
@@ -164,7 +176,7 @@ class Job {
       this.setState('cancelled');
       this.append('Job cancelled.');
     } else {
-      state.port.postMessage({
+      port.postMessage({
         topic: 'cancel-job',
         data: {
           jobId: this.id,
@@ -238,10 +250,10 @@ class CookieJar {
  * Does nothing if the port is already open.
  */
 function openPort () {
-  if (!state.port) {
-    state.port = chrome.runtime.connectNative('youtube_dl_button');
-    state.port.onMessage.addListener(onPortMessage);
-    state.port.onDisconnect.addListener(onPortDisconnect);
+  if (!port) {
+    port = chrome.runtime.connectNative('youtube_dl_button');
+    port.onMessage.addListener(onPortMessage);
+    port.onDisconnect.addListener(onPortDisconnect);
   }
 }
 
@@ -438,8 +450,8 @@ function onJobEnded (message) {
   // Disconnect the port if there are no jobs.
   if (!job && (activeJobCount === 0)) {
     console.log('no jobs - disconnecting native-app');
-    state.port.disconnect();
-    state.port = null;
+    port.disconnect();
+    port = null;
 
     // Make the icon dark because the queue is idle.
     chrome.action.setIcon({ 
