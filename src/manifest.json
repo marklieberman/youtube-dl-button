@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Youtube-DL Button",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Add a browser action that sends the tab or a URL to youtube-dl.",
 
   "browser_specific_settings": {
